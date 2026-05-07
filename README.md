@@ -1,8 +1,4 @@
-# CareerSwipe 🃏
 
-A full-stack job-matching web app powered by **Python Flask**, **MySQL**, and a **Tinder-style swipe UI**. Resumes are parsed and matched to jobs using **TF-IDF + Cosine Similarity**.
-
----
 
 ## Project Structure
 
