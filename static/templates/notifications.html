@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications History - CareerSwipe{% endblock %}
+
+{% block content %}
+<div class="dash-wrap">
+    <div class="dash-main">
+        <header class="dash-header">
+            <div class="dash-header-left">
+                <h1 class="syne-bold">My <span>Notifications</span></h1>
+                <p class="text-muted">Total History (Ordered by Latest)</p>
+            </div>
+            <div class="dash-header-right">
+                <button id="markAllReadHistory" class="btn btn-outline-dark btn-sm">Mark All as Read</button>
+            </div>
+        </header>
+
+        <section class="notifs-history-container glass mt-2">
+            {% if notifications %}
+                <div class="notifs-history-list">
+                    {% for n in notifications %}
+                        <div class="notif-item-history {{ 'unread' if not n.is_read else '' }}" data-id="{{ n.id }}">
+                            <div class="notif-item-icon">
+                                {% if n.type == 'application' %}💼
+                                {% elif n.type == 'accepted' %}🎉
+                                {% elif n.type == 'rejected' %}❌
+                                {% elif n.type == 'interview' %}📅
+                                {% else %}🔔{% endif %}
+                            </div>
+                            <div class="notif-item-content">
+                                <p class="notif-message">{{ n.message }}</p>
+                                <span class="notif-time">{{ n.created_at.strftime('%b %d, %Y at %I:%M %p') }}</span>
+                            </div>
+                            <div class="notif-item-status">
+                                {% if not n.is_read %}
+                                    <span class="unread-dot"></span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="notif-empty-state">
+                    <span class="empty-icon">🔔</span>
+                    <h3>No notifications yet</h3>
+                    <p>When you get updates about your applications or swipes, they'll appear here.</p>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+
+<style>
+.notifs-history-container {
+    padding: 0;
+    overflow: hidden;
+    margin-top: 1.5rem;
+}
+.notif-item-history {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid var(--border);
+    transition: var(--transition);
+    cursor: pointer;
+}
+.notif-item-history:hover {
+    background: rgba(59, 130, 246, 0.05);
+}
+.notif-item-history.unread {
+    background: rgba(59, 130, 246, 0.03);
+    border-left: 4px solid var(--primary);
+}
+.notif-item-icon {
+    font-size: 1.5rem;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-600);
+    border-radius: var(--radius-md);
+}
+.notif-item-content {
+    flex: 1;
+}
+.notif-message {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+.notif-time {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.unread-dot {
+    width: 10px;
+    height: 10px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: inline-block;
+}
+.notif-empty-state {
+    padding: 5rem 2rem;
+    text-align: center;
+}
+.empty-icon {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 1.5rem;
+    opacity: 0.3;
+}
+.mt-2 { margin-top: 2rem; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Mark as read when clicking in history
+    document.querySelectorAll('.notif-item-history.unread').forEach(item => {
+        item.addEventListener('click', async () => {
+            const id = item.dataset.id;
+            try {
+                const res = await fetch(`/api/notifications/read/${id}`, { method: 'POST' });
+                if (res.ok) {
+                    item.classList.remove('unread');
+                    const dot = item.querySelector('.unread-dot');
+                    if (dot) dot.remove();
+                }
+            } catch (err) { console.error(err); }
+        });
+    });
+
+    // Mark all read in history
+    const markAllBtn = document.getElementById('markAllReadHistory');
+    if (markAllBtn) {
+        markAllBtn.addEventListener('click', async () => {
+            try {
+                const res = await fetch('/api/notifications/read-all', { method: 'POST' });
+                if (res.ok) {
+                    document.querySelectorAll('.notif-item-history.unread').forEach(item => {
+                        item.classList.remove('unread');
+                        const dot = item.querySelector('.unread-dot');
+                        if (dot) dot.remove();
+                    });
+                }
+            } catch (err) { console.error(err); }
+        });
+    }
+});
+</script>
+{% endblock %}

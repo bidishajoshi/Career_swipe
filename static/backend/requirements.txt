@@ -1,0 +1,33 @@
+# CareerSwipe Backend Requirements
+
+# Core Framework
+Flask==3.0.3
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.7
+Flask-Mail==0.10.0
+Flask-CORS==4.0.0
+
+# Database
+psycopg2-binary==2.9.9
+SQLAlchemy==2.0.27
+
+# Security & Hashing
+Werkzeug==3.0.3
+bcrypt==4.1.2
+
+# Environment
+python-dotenv==1.0.1
+
+# Server
+gunicorn==22.0.0
+
+# Utilities
+click==8.3.2
+itsdangerous==2.2.0
+Jinja2==3.1.6
+MarkupSafe==3.0.3
+
+# File Processing (for resume uploads)
+pdfplumber==0.11.4
+python-docx==1.1.2
+Pillow==12.2.0

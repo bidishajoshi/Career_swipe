@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: careerswipe-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn backend.app:app
+    healthCheckPath: /api/health
+    healthCheckInterval: 300
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: careerswipe-postgres
+          property: connectionString
+
+  - type: pserv
+    name: careerswipe-postgres
+    ipWhitelist: []
+    plan: free
+    region: ohio
+    databaseName: careerswipe_db
+    user: careerswipe_user
+    postgresMajorVersion: 16
