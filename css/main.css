@@ -1741,8 +1741,19 @@ body.light-mode .filter-input {
   .demo-card {
     width: 200px;
   }
-}
 
+  .btn { 
+    padding: 10px 22px; 
+    font-size: 14px;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    padding: 9px 12px;
+    font-size: 14px;
+  }
+}
 
 /* ════════════════════════════════════════════════════════════════════════
    RESPONSIVE — MOBILE  (≤ 768px)
@@ -1780,6 +1791,10 @@ body.light-mode .filter-input {
     font-size: 16px;
     width: 100%;
     padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
   }
 
   /* Hero */
@@ -1796,6 +1811,8 @@ body.light-mode .filter-input {
 
   .hero-btns {
     justify-content: center;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .hero-card-stack {
@@ -1814,7 +1831,7 @@ body.light-mode .filter-input {
     position: static;
     flex-direction: row;
     flex-wrap: nowrap;
-    padding: 1rem;
+    padding: 0.75rem 1rem;
     gap: 0;
     overflow-x: auto;
     border-right: none;
@@ -1854,6 +1871,7 @@ body.light-mode .filter-input {
     white-space: nowrap;
     border-left: none !important;
     padding-left: 14px !important;
+    min-height: 40px;
   }
 
   .sidebar-nav a:hover,
@@ -1864,7 +1882,7 @@ body.light-mode .filter-input {
   }
 
   .dash-main {
-    padding: 1.25rem;
+    padding: 1rem;
   }
 
   /* Auth */
@@ -1889,15 +1907,54 @@ body.light-mode .filter-input {
     grid-template-columns: 1fr;
   }
 
+  .field {
+    margin-bottom: 14px;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    padding: 11px 12px;
+    font-size: 16px;
+    min-height: 44px;
+    border-radius: var(--radius-md);
+  }
+
+  .field textarea {
+    min-height: 100px;
+  }
+
+  .field label {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .btn {
+    padding: 11px 22px;
+    font-size: 15px;
+    min-height: 44px;
+    border-radius: var(--radius-md);
+  }
+
+  .btn-sm {
+    padding: 8px 16px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+
   /* Filters */
   .filter-form {
-    gap: 6px;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
   .filter-select,
   .filter-input {
-    font-size: 12px;
-    padding: 7px 10px;
+    font-size: 14px;
+    padding: 10px 12px;
+    min-height: 42px;
+    flex: 1;
+    min-width: 140px;
   }
 
   /* Applicant cards */
@@ -1907,10 +1964,12 @@ body.light-mode .filter-input {
 
   .app-card-right {
     align-items: flex-start;
+    width: 100%;
   }
 
   .app-actions {
     justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
   .app-skills {
@@ -1921,16 +1980,29 @@ body.light-mode .filter-input {
   .scores-wrap {
     justify-content: flex-start;
   }
+
+  /* Touch-friendly spacing */
+  .notif-btn,
+  .theme-btn {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px;
+  }
+
+  /* File upload */
+  .file-upload-label {
+    padding: 1.25rem;
+    min-height: 60px;
+    font-size: 14px;
+  }
 }
 
-
 /* ════════════════════════════════════════════════════════════════════════
-   RESPONSIVE — SMALL MOBILE  (≤ 480px)
+   RESPONSIVE — SMALL MOBILE  (≤ 600px)
    ════════════════════════════════════════════════════════════════════════ */
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .navbar {
-    padding: 0 1rem;
-    height: 58px;
+    height: 56px;
   }
 
   .nav-logo {
@@ -1938,56 +2010,185 @@ body.light-mode .filter-input {
   }
 
   .hero {
-    padding: 2.5rem 1rem;
+    padding: 2.5rem 1rem 2rem;
   }
 
   .hero-inner h1 {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
 
   .hero-card-stack {
-    width: 200px;
-    height: 170px;
+    width: 220px;
+    height: 180px;
   }
 
   .demo-card {
-    width: 175px;
-    padding: 1rem;
+    width: 190px;
+    padding: 1.25rem;
   }
 
-  .flash-wrap {
-    padding: 8px 1rem 0;
+  .form-section-label {
+    font-size: 10px;
+    margin: 1.25rem 0 0.65rem;
   }
 
-  .dash-main {
-    padding: 1rem;
+  .field {
+    margin-bottom: 12px;
   }
 
-  .section-header h2 {
-    font-size: 1.15rem;
+  .field-row {
+    gap: 10px;
   }
 
-  .filters-bar {
-    padding: 0.75rem;
+  .btn {
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 15px;
+    min-height: 48px;
+  }
+
+  .btn-sm {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 13px;
+    min-height: 44px;
   }
 
   .filter-form {
     flex-direction: column;
-    align-items: stretch;
+    gap: 10px;
   }
 
   .filter-select,
   .filter-input {
     width: 100%;
+    min-width: 100%;
+    font-size: 16px;
   }
 
-  .btn {
-    padding: 10px 20px;
+  .feature-card {
+    padding: 1.5rem;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   RESPONSIVE — EXTRA SMALL MOBILE  (≤ 480px)
+   ════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0 0.75rem;
+    height: 56px;
+  }
+
+  .nav-logo {
+    font-size: 1.15rem;
+    letter-spacing: -1px;
+  }
+
+  .hero {
+    padding: 2rem 0.75rem;
+  }
+
+  .hero-inner h1 {
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+
+  .hero-inner p {
+    font-size: 14px;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-btns {
+    gap: 8px;
+  }
+
+  .hero-card-stack {
+    width: 180px;
+    height: 150px;
+  }
+
+  .demo-card {
+    width: 160px;
+    padding: 1rem;
+  }
+
+  .demo-card b {
     font-size: 14px;
   }
 
+  .demo-card small {
+    font-size: 11px;
+  }
+
+  .section-title {
+    font-size: 1.3rem;
+  }
+
+  .section-sub {
+    font-size: 13px;
+    margin-bottom: 2rem;
+  }
+
+  .features {
+    gap: 1rem;
+  }
+
+  .feature-card {
+    padding: 1.25rem;
+  }
+
+  .feat-icon {
+    font-size: 1.8rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .feature-card h3 {
+    font-size: 16px;
+  }
+
+  .feature-card p {
+    font-size: 13px;
+  }
+
+  .flash-wrap {
+    padding: 8px 0.75rem 0;
+  }
+
+  .dash-main {
+    padding: 0.75rem;
+  }
+
+  .section-header h2 {
+    font-size: 1rem;
+  }
+
+  .filters-bar {
+    padding: 0.65rem;
+  }
+
+  .filter-form {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .filter-select,
+  .filter-input {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px 12px;
+    min-height: 44px;
+  }
+
+  .btn {
+    padding: 10px 18px;
+    font-size: 14px;
+    width: 100%;
+  }
+
   .btn-sm {
-    padding: 5px 12px;
+    padding: 7px 14px;
     font-size: 12px;
   }
 
@@ -1998,6 +2199,103 @@ body.light-mode .filter-input {
   .sidebar-nav a {
     padding: 7px 12px !important;
     font-size: 12px;
+    min-height: 38px;
+  }
+
+  .auth-wrap {
+    padding: 1rem 0.75rem 1.5rem;
+  }
+
+  .auth-card {
+    border-radius: var(--radius-lg);
+  }
+
+  .auth-header {
+    padding: 1.25rem;
+  }
+
+  .auth-form {
+    padding: 1.25rem;
+  }
+
+  .auth-header h2 {
+    font-size: 1.35rem;
+  }
+
+  .role-badge {
+    font-size: 10px;
+    padding: 3px 10px;
+  }
+
+  .field {
+    margin-bottom: 11px;
+  }
+
+  .field label {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    font-size: 16px;
+    padding: 10px 11px;
+    border-radius: var(--radius-md);
+  }
+
+  .field textarea {
+    min-height: 90px;
+  }
+
+  .file-upload-label {
+    padding: 1rem;
+    font-size: 12px;
+    min-height: 55px;
+  }
+
+  .notif-btn,
+  .theme-btn,
+  .logout-btn {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  /* Company Dashboard Mobile */
+  .dash-header-v2 {
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .header-welcome h1 {
+    font-size: 1.25rem;
+  }
+
+  .header-welcome p {
+    font-size: 0.85rem;
+  }
+
+  .stats-grid-v2 {
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .stat-card-v2 {
+    padding: 1rem;
+  }
+
+  .stat-icon-wrap {
+    width: 44px;
+    height: 44px;
+    font-size: 1.25rem;
+  }
+
+  .stat-value {
+    font-size: 1.35rem;
+  }
+
+  .stat-title {
+    font-size: 10px;
   }
 }
 
