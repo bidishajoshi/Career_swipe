@@ -94,7 +94,7 @@ body.light-mode {
   /* Semantic aliases */
   --bg-deep: #fff1f2;
   --bg-navy: #ffe4e6;
-  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-card: rgba(247, 235, 235, 0.85);
   --sidebar-bg: rgba(255, 251, 252, 0.95);
 
   /* Text */
