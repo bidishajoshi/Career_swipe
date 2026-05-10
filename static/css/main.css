@@ -78,7 +78,7 @@
 
 /* Light Mode Override (Pink Pastel Style) */
 body.light-mode {
-  --primary: #bb5186;
+  --primary: #bc5187;
   --primary-dark: #cb578b;
   --primary-light: #f774b8;
   --primary-glow: rgba(135, 46, 91, 0.25);
