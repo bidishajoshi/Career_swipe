@@ -109,7 +109,7 @@ body.light-mode {
   /* Background Glow Orbs */
   --glow-1: rgba(58, 54, 56, 0.15);
   --glow-2: rgba(244, 114, 182, 0.1);
-  --glow-3: rgba(251, 113, 133, 0.08);
+  --glow-3: rgba(97, 86, 88, 0.08);
 
   /* Overrides for specific card states */
   --seeker-light: rgba(236, 72, 153, 0.08);
