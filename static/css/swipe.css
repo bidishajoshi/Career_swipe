@@ -61,7 +61,7 @@
   background: linear-gradient(
     115deg,
     transparent 40%,
-    rgba(255, 255, 255, 0.25) 50%,
+    rgba(210, 145, 145, 0.25) 50%,
     transparent 60%
   );
   transform: rotate(-20deg);
