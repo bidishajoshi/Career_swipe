@@ -117,7 +117,7 @@ body.light-mode {
 
   /* Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.7);
-  --shadow-md: 0 8px 24px rgba(131, 24, 67, 0.08);
+  --shadow-md: 0 8px 24px rgba(139, 32, 75, 0.08);
 }
 
 /* ── Reset ────────────────────────────────────────────────────────────── */
