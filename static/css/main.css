@@ -104,7 +104,7 @@ body.light-mode {
 
   /* Borders */
   --border: rgba(236, 72, 153, 0.15);
-  --border-hover: rgba(236, 72, 153, 0.4);
+  --border-hover: rgba(241, 54, 148, 0.4);
 
   /* Background Glow Orbs */
   --glow-1: rgba(58, 54, 56, 0.15);
