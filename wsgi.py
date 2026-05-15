@@ -14,19 +14,10 @@ load_dotenv()
 # Add the project root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-try:
-    # Try importing from backend (new structure)
-    from backend.app import create_app
-    app = create_app()
-except ImportError as e:
-    print(f"Import error from backend: {e}")
-    # Fallback to root app.py
-    try:
-        from app import app
-    except ImportError as e2:
-        print(f"Import error from root app: {e2}")
-        raise
+# Import directly from the root app.py (the working monolith)
+from app import app
 
 # For production servers
 if __name__ == '__main__':
-    app.run()
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)

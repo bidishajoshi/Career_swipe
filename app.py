@@ -733,5 +733,12 @@ def mark_all_read():
     return jsonify({"status": "ok"})
 
 
+# ── Health Check ─────────────────────────────────────────────────────────────
+@app.route("/api/health")
+def health_check():
+    return {"status": "healthy", "service": "CareerSwipe"}, 200
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host="0.0.0.0", port=port)
