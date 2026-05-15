@@ -401,7 +401,7 @@ def seeker_dashboard():
         .filter_by(seeker_id=session["seeker_id"], direction="right")
         .order_by(JobSwipe.created_at.desc())
         .all()
-    )j  `
+    )
     applications = [
         {
             "title":        s.job_listing.title,
