@@ -1,7 +1,7 @@
 """Job API Routes"""
 
 from flask import request, jsonify
-from backend.routes import job_bp
+from . import job_bp
 from backend.controllers import JobController
 
 

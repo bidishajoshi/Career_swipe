@@ -1,7 +1,7 @@
 """Application API Routes"""
 
 from flask import request, jsonify
-from backend.routes import application_bp
+from . import application_bp
 from backend.controllers import ApplicationController
 
 

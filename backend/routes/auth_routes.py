@@ -1,7 +1,7 @@
 """Authentication API Routes"""
 
 from flask import request, jsonify
-from backend.routes import auth_bp
+from . import auth_bp
 from backend.controllers import AuthController
 
 
