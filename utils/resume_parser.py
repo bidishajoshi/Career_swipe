@@ -1,9 +1,14 @@
 import re
 import os
-import subprocess
 import uuid
 import pdfplumber
 from docx import Document
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+from reportlab.lib.colors import HexColor
 
 def normalize_date(date_str):
     """Converts various date formats to YYYY-MM-DD for HTML date inputs."""
@@ -70,20 +75,104 @@ def extract_text_from_docx(docx_path):
         print(f"Word extraction error: {e}")
         return ""
 
-def convert_to_pdf(input_path, output_folder):
-    """Converts .doc or .docx to .pdf using LibreOffice headless."""
+def convert_docx_to_pdf(docx_path, output_folder):
+    """Converts .docx to .pdf using reportlab and python-docx.
+    
+    This is a pure Python solution that doesn't require LibreOffice.
+    """
     try:
-        subprocess.run([
-            'soffice', 
-            '--headless', 
-            '--convert-to', 'pdf', 
-            '--outdir', output_folder, 
-            input_path
-        ], check=True, capture_output=True)
+        # Extract text from DOCX
+        doc = Document(docx_path)
         
-        base_name = os.path.basename(input_path).rsplit('.', 1)[0]
+        # Create PDF
+        base_name = os.path.basename(docx_path).rsplit('.', 1)[0]
         pdf_path = os.path.join(output_folder, f"{base_name}.pdf")
+        
+        # Build PDF with extracted content
+        story = []
+        styles = getSampleStyleSheet()
+        
+        # Custom heading style
+        heading_style = ParagraphStyle(
+            'CustomHeading',
+            parent=styles['Heading1'],
+            fontSize=14,
+            textColor=HexColor('#1f2937'),
+            spaceAfter=12,
+            fontName='Helvetica-Bold'
+        )
+        
+        body_style = ParagraphStyle(
+            'CustomBody',
+            parent=styles['BodyText'],
+            fontSize=10,
+            textColor=HexColor('#374151'),
+            spaceAfter=6,
+            leading=14
+        )
+        
+        current_heading = None
+        for para in doc.paragraphs:
+            if not para.text.strip():
+                story.append(Spacer(1, 0.1 * inch))
+                continue
+            
+            text = para.text.strip()
+            # Detect headings by checking if they're short and in uppercase/title case
+            if len(text) < 50 and (text.isupper() or text.istitle()) and any(c.isupper() for c in text):
+                if story:
+                    story.append(Spacer(1, 0.15 * inch))
+                story.append(Paragraph(text, heading_style))
+                current_heading = text
+            else:
+                story.append(Paragraph(text, body_style))
+        
+        # Add tables if present
+        for table in doc.tables:
+            for row in table.rows:
+                row_text = " | ".join([cell.text for cell in row.cells])
+                if row_text.strip():
+                    story.append(Paragraph(row_text, body_style))
+        
+        # Generate PDF
+        doc_pdf = SimpleDocTemplate(pdf_path, pagesize=letter)
+        doc_pdf.build(story)
+        
         return pdf_path if os.path.exists(pdf_path) else None
+    except Exception as e:
+        print(f"DOCX to PDF conversion error: {e}")
+        return None
+
+def convert_to_pdf(input_path, output_folder):
+    """Converts .doc or .docx to .pdf using pure Python."""
+    try:
+        base_name = os.path.basename(input_path).rsplit('.', 1)[0]
+        ext = input_path.rsplit('.', 1)[-1].lower()
+        
+        if ext == 'docx':
+            pdf_path = convert_docx_to_pdf(input_path, output_folder)
+            return pdf_path
+        elif ext == 'doc':
+            # For .doc files, try to convert using reportlab
+            # or return None to fall back to extraction only
+            print(f"Note: .doc files have limited support. Converting to text-based PDF.")
+            try:
+                text = extract_text_from_docx(input_path)  # May work with older .doc format
+                if text:
+                    pdf_path = os.path.join(output_folder, f"{base_name}.pdf")
+                    # Create a simple text PDF
+                    story = []
+                    styles = getSampleStyleSheet()
+                    for line in text.split('\n')[:200]:  # Limit lines
+                        if line.strip():
+                            story.append(Paragraph(line.strip(), styles['BodyText']))
+                    doc = SimpleDocTemplate(pdf_path, pagesize=letter)
+                    doc.build(story)
+                    return pdf_path if os.path.exists(pdf_path) else None
+            except:
+                return None
+        else:
+            return None
     except Exception as e:
         print(f"Conversion error: {e}")
         return None
@@ -151,13 +240,43 @@ def process_resume(filepath, upload_folder):
                 full_name = head_match.group(1).strip()
                 break
 
-    # Step 3: Extract Contact Info
+    # Step 3: Extract Contact Info (Enhanced)
     email_match = re.search(r'[\w.-]+@[\w.-]+', text)
     email = email_match.group(0) if email_match else ""
     
-    phone_regex = r'(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\+?\d{10,13}'
-    phone_match = re.search(phone_regex, text)
-    phone = phone_match.group(0) if phone_match else ""
+    # Improved phone regex - support multiple international formats
+    phone_patterns = [
+        r'\+977[- ]?\d{10}',  # Nepal format
+        r'977[- ]?\d{10}',    # Nepal without +
+        r'\+\d{1,3}[- ]?\(?\d{1,4}\)?[- ]?\d{1,4}[- ]?\d{1,9}',  # International
+        r'\(?(\d{3})\)?[- ]?(\d{3})[- ]?(\d{4})',  # US/Canada format
+        r'[0-9]{7,15}'  # Generic digits only (7-15 digits)
+    ]
+    phone = ""
+    for pattern in phone_patterns:
+        phone_match = re.search(pattern, text)
+        if phone_match:
+            phone = phone_match.group(0).strip()
+            break
+    
+    # Step 3b: Extract Gender (Enhanced - more patterns)
+    gender = "Other"
+    gender_match = re.search(r'(?:gender|sex)[:\s]+(male|female|other|m|f)', text, re.IGNORECASE)
+    if gender_match:
+        g = gender_match.group(1).lower()
+        gender = "Male" if g in ['male', 'm'] else ("Female" if g in ['female', 'f'] else "Other")
+    else:
+        # Heuristic detection from pronouns and titles
+        female_indicators = ["ms.", "mrs.", "miss", "she/her", "female", "woman", "lady"]
+        male_indicators = ["mr.", "he/him", "male", "man", "gentleman"]
+        
+        female_count = sum(1 for indicator in female_indicators if indicator in text_lower)
+        male_count = sum(1 for indicator in male_indicators if indicator in text_lower)
+        
+        if female_count > male_count:
+            gender = "Female"
+        elif male_count > female_count:
+            gender = "Male"
 
     # Step 4: Address (Robust)
     address = ""
@@ -273,9 +392,7 @@ def process_resume(filepath, upload_folder):
         "email": email,
         "phone": phone,
         "address": address,
-        "gender": (re.search(r'(?:gender|sex)[:\s]+(male|female|other)', text_lower).group(1).capitalize() if re.search(r'(?:gender|sex)[:\s]+(male|female|other)', text_lower) else 
-                   ("Female" if any(kw in text_lower for kw in ["ms.", "mrs.", "she/her", "female"]) else 
-                    ("Male" if any(kw in text_lower for kw in ["mr.", "he/him", "male"]) else "Other"))),
+        "gender": gender,  # Use the enhanced extracted gender
         "dob": dob,
         "education": highest_qual,
         "experience": experience_summary,
