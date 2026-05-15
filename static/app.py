@@ -392,26 +392,24 @@ def seeker_dashboard():
             "ats_score":        ats_data.get("score", 0) if ats_data else 0,
             "ats_findings":     ats_data.get("findings", []) if ats_data else [],
         })
+jobs.sort(key=lambda x: (x["is_boosted"], x["match_score"]), reverse=True)
 
-    jobs.sort(key=lambda x: (x["is_boosted"], x["match_score"]), reverse=True)
-
-    # Fetch applied jobs
-    swipes = (
-        JobSwipe.query
-        .filter_by(seeker_id=session["seeker_id"], direction="right")
-        .order_by(JobSwipe.created_at.desc())
-        .all()
-    )j  `
-    applications = [
-        {
-            "title":        s.job_listing.title,
-            "company_name": s.job_listing.company.company_name,
-            "applied_at":   s.created_at,
-            "status":       s.status,
-        }
-        for s in swipes
-    ]
-
+# Fetch applied jobs
+swipes = (
+    JobSwipe.query
+    .filter_by(seeker_id=session["seeker_id"], direction="right")
+    .order_by(JobSwipe.created_at.desc())
+    .all()
+)
+applications = [
+    {
+        "title": s.job_listing.title,
+        "company_name": s.job_listing.company.company_name,
+        "applied_at": s.created_at,
+        "status": s.status,
+    }
+    for s in swipes
+]
     return render_template(
         "seeker_dashboard.html",
         seeker=seeker,
