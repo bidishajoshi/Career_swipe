@@ -151,6 +151,7 @@ def upload_resume_step():
                     "email": extracted_email,
                     "phone": extracted_data.get("phone", ""),
                     "address": extracted_data.get("address", ""),
+                    "country": extracted_data.get("country", ""),
                     "gender": extracted_data.get("gender", "Other"),
                     "dob": extracted_data.get("dob", ""),
                     "education": extracted_data.get("education", ""),
