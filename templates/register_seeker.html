@@ -72,6 +72,11 @@
           </div>
 
           <div class="field">
+            <label>Country</label>
+            <input type="text" name="country" id="field-country" placeholder="e.g. Nepal, India, USA, etc." value="">
+          </div>
+
+          <div class="field">
             <label>Email address</label>
             <input type="email" name="email" id="field-email" required placeholder="ex@gmail.com" value="{{ email }}">
           </div>
@@ -240,6 +245,20 @@
               <option>Social Media</option>
               <option>Other</option>
             </select>
+          </div>
+
+          <div class="field">
+            <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+              <input type="checkbox" name="age_verified" style="width: auto; margin-top: 4px;" required>
+              <span>I confirm that I am at least 18 years old and legally eligible to work in my country.</span>
+            </label>
+          </div>
+
+          <div class="field">
+            <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+              <input type="checkbox" name="legally_eligible" style="width: auto; margin-top: 4px;" required>
+              <span>I certify that I have the legal right to work in the country I selected and comply with all applicable laws.</span>
+            </label>
           </div>
 
           <div class="field">
