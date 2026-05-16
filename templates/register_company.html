@@ -25,6 +25,10 @@
         </div>
       </div>
       <div class="field">
+        <label>Country of Operation</label>
+        <input type="text" name="country" required placeholder="e.g. Nepal, India, USA, etc.">
+      </div>
+      <div class="field">
         <label>Industry type</label>
         <select name="industry">
           <option>Information Technology</option>
@@ -58,6 +62,20 @@
           <span class="file-name-display" id="logo-name">No file chosen</span>
         </label>
         <input type="file" name="logo" id="logo-input" accept=".png,.jpg,.jpeg" style="display:none">
+      </div>
+
+      <div class="form-section-label">Eligibility &amp; Legal Confirmation</div>
+      <div class="field">
+        <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+          <input type="checkbox" name="age_verified" style="width: auto; margin-top: 4px;" required>
+          <span>I confirm that the company representative is at least 18 years old and authorized to register.</span>
+        </label>
+      </div>
+      <div class="field">
+        <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
+          <input type="checkbox" name="legally_eligible" style="width: auto; margin-top: 4px;" required>
+          <span>I certify that this company is legally registered and eligible to operate in the {{ country or 'selected country' }}, and complies with all applicable employment laws.</span>
+        </label>
       </div>
 
       <button type="submit" class="btn btn-primary btn-full">Register Company →</button>
