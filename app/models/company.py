@@ -23,6 +23,7 @@ class Company(db.Model):
     # Company details
     phone              = db.Column(db.String(30))
     company_address    = db.Column(db.String(500))
+    country            = db.Column(db.String(100))
     description        = db.Column(db.Text)
     industry           = db.Column(db.String(150))
     website            = db.Column(db.String(300))
@@ -31,6 +32,8 @@ class Company(db.Model):
     # Account status
     verification_token = db.Column(db.String(100))
     is_verified        = db.Column(db.Boolean, default=False)
+    age_verified       = db.Column(db.Boolean, default=False)
+    legally_eligible   = db.Column(db.Boolean, default=False)
     created_at         = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -48,6 +51,7 @@ class Company(db.Model):
             'email':           self.email,
             'phone':           self.phone,
             'company_address': self.company_address,
+            'country':         self.country,
             'industry':        self.industry,
             'website':         self.website,
             'logo_path':       self.logo_path,

@@ -21,6 +21,7 @@ class Seeker(db.Model):
     # Contact & location
     phone              = db.Column(db.String(30))
     address            = db.Column(db.String(500))
+    country            = db.Column(db.String(100))
 
     # Professional background
     education          = db.Column(db.String(255))
@@ -45,6 +46,8 @@ class Seeker(db.Model):
     # Account status
     verification_token = db.Column(db.String(100))
     is_verified        = db.Column(db.Boolean, default=False)
+    age_verified       = db.Column(db.Boolean, default=False)
+    legally_eligible   = db.Column(db.Boolean, default=False)
     created_at         = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -64,6 +67,7 @@ class Seeker(db.Model):
             'email':             self.email,
             'phone':             self.phone,
             'address':           self.address,
+            'country':           self.country,
             'education':         self.education,
             'skills':            self.skills,
             'career_field':      self.career_field,
