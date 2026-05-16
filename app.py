@@ -193,6 +193,14 @@ def register_seeker():
             flash("Email already registered.", "error")
             return redirect(url_for("register_seeker"))
 
+        # Verify eligibility and age
+        age_verified = request.form.get("age_verified") == "on"
+        legally_eligible = request.form.get("legally_eligible") == "on"
+        
+        if not age_verified or not legally_eligible:
+            flash("You must confirm you are 18+ and eligible to work.", "error")
+            return redirect(url_for("register_seeker"))
+
         resume_path = resume_data.get("resume_path", "")
         
         resume_file = request.files.get("resume")
@@ -208,6 +216,7 @@ def register_seeker():
             password_hash=generate_password_hash(request.form["password"]),
             phone=request.form.get("phone", ""),
             address=request.form.get("address", ""),
+            country=request.form.get("country", ""),
             education=request.form.get("education", ""),
             experience=request.form.get("experience", ""),
             skills=request.form.get("skills", ""),
@@ -221,7 +230,9 @@ def register_seeker():
             desired_roles=request.form.get("desired_roles"),
             salary_expectation=request.form.get("salary"),
             availability=request.form.get("availability"),
-            is_verified=True
+            is_verified=True,
+            age_verified=age_verified,
+            legally_eligible=legally_eligible
         )
         db.session.add(new_seeker)
         db.session.commit()
@@ -262,6 +273,14 @@ def register_company():
             flash("Email already registered.", "error")
             return redirect(url_for("register_company"))
 
+        # Verify eligibility and legal status
+        age_verified = request.form.get("age_verified") == "on"
+        legally_eligible = request.form.get("legally_eligible") == "on"
+        
+        if not age_verified or not legally_eligible:
+            flash("Your company must confirm it is legally eligible to operate.", "error")
+            return redirect(url_for("register_company"))
+
         logo_file = request.files.get("logo")
         logo_path = ""
         if logo_file and logo_file.filename and allowed_file(logo_file.filename, ALLOWED_LOGO):
@@ -276,8 +295,11 @@ def register_company():
             description=request.form.get("description", ""),
             industry=request.form.get("industry", ""),
             website=request.form.get("website", ""),
+            country=request.form.get("country", ""),
             logo_path=logo_path,
-            is_verified=True
+            is_verified=True,
+            age_verified=age_verified,
+            legally_eligible=legally_eligible
         )
         db.session.add(new_company)
         db.session.commit()
