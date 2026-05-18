@@ -14,6 +14,7 @@ from werkzeug.exceptions import HTTPException
 from config import Config
 from extensions import db, migrate, mail
 from models import Seeker, Company, JobListing, JobSwipe, Notification
+from services import NotificationService, EligibilityService
 from utils.tfidf import parse_resume, match_resume_to_job, extract_keywords
 from utils.ats import calculate_ats_score
 from utils.resume_parser import process_resume
@@ -30,8 +31,17 @@ mail.init_app(app)
 with app.app_context():
     try:
         db.create_all()
+        # Initialize default eligibility questions
+        EligibilityService.create_eligibility_questions()
     except Exception as e:
         print(f"Note: Database creation skipped or failed: {e}")
+
+# Register Blueprints
+from app.routes.notifications import notifications_bp
+from app.routes.eligibility import eligibility_bp
+
+app.register_blueprint(notifications_bp, url_prefix='')
+app.register_blueprint(eligibility_bp, url_prefix='')
 
 
 # ── Error Handlers ────────────────────────────────────────────────────────────
