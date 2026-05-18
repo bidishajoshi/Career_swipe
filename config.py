@@ -25,9 +25,10 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Require SSL only for remote Postgres databases (Render)
-    _is_remote = "localhost" not in _raw_db_url and "127.0.0.1" not in _raw_db_url and not _raw_db_url.startswith("sqlite")
+    _is_sqlite = _raw_db_url.startswith("sqlite")
+    _is_remote = "localhost" not in _raw_db_url and "127.0.0.1" not in _raw_db_url and not _is_sqlite
 
-    SQLALCHEMY_ENGINE_OPTIONS = {
+    SQLALCHEMY_ENGINE_OPTIONS = {} if _is_sqlite else {
         "pool_pre_ping": True,      # health-check before each query
         "pool_recycle": 300,        # recycle connections every 5 min
         "pool_timeout": 10,         # max 10s waiting for a pool connection

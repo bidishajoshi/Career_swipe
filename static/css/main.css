@@ -76,47 +76,48 @@
   --glow-3: rgba(37, 43, 41, 0.05);
 }
 
-/* Light Mode Override (Pink Pastel Style) */
+/* Light Mode Override (Very Light Soft Pastel Pink Style) */
 body.light-mode {
-  --primary: #bc5187;
-  --primary-dark: #cb578b;
-  --primary-light: #f774b8;
-  --primary-glow: rgba(135, 46, 91, 0.25);
-  --accent: #f43f5e;
-  --accent-glow: rgba(69, 55, 58, 0.2);
-  --accent-dark: #a41d3a;
+  --primary: #f472b6;
+  --primary-dark: #db2777;
+  --primary-light: #fbcfe8;
+  --primary-glow: rgba(244, 114, 182, 0.3);
+  --accent: #fb7185;
+  --accent-glow: rgba(251, 113, 133, 0.3);
+  --accent-dark: #e11d48;
 
-  --bg-900: #9d9394;
-  --bg-800: #ffe2e4;
-  --bg-700: #fecdd3;
-  --bg-600: #fda4af;
+  /* Very light soft pink backgrounds */
+  --bg-900: #fdf2f8;
+  --bg-800: #fce7f3;
+  --bg-700: #fbcfe8;
+  --bg-600: #f9a8d4;
 
   /* Semantic aliases */
-  --bg-deep: #fde9ea;
-  --bg-navy: #ffe4e6;
-  --bg-card: rgba(247, 235, 235, 0.85);
-  --sidebar-bg: rgba(255, 251, 252, 0.95);
+  --bg-deep: #fff0f5;  /* Lavender blush / very light pink */
+  --bg-navy: #fce7f3;
+  --bg-card: rgba(255, 255, 255, 0.85); /* White glass cards look great on light pink */
+  --sidebar-bg: rgba(253, 242, 248, 0.95);
 
-  /* Text */
-  --text: #83133f;
-  --text-muted: #7e123d;
-  --text-dim: #ba2b6b;
+  /* Text - Dark pink/magenta for readability on light backgrounds */
+  --text: #831843;
+  --text-muted: #be185d;
+  --text-dim: #db2777;
 
   /* Borders */
-  --border: rgba(236, 72, 153, 0.15);
-  --border-hover: rgba(241, 54, 148, 0.4);
+  --border: rgba(244, 114, 182, 0.25);
+  --border-hover: rgba(219, 39, 119, 0.4);
 
   /* Background Glow Orbs */
-  --glow-1: rgba(58, 54, 56, 0.15);
-  --glow-2: rgba(244, 114, 182, 0.1);
-  --glow-3: rgba(97, 86, 88, 0.08);
+  --glow-1: rgba(244, 114, 182, 0.15);
+  --glow-2: rgba(219, 39, 119, 0.1);
+  --glow-3: rgba(251, 113, 133, 0.08);
 
   /* Overrides for specific card states */
-  --seeker-light: rgba(236, 72, 153, 0.08);
-  --company-light: rgba(244, 63, 94, 0.08);
+  --seeker-light: rgba(244, 114, 182, 0.1);
+  --company-light: rgba(251, 113, 133, 0.1);
 
   /* Glassmorphism */
-  --glass-bg: rgba(132, 112, 112, 0.7);
+  --glass-bg: rgba(255, 255, 255, 0.75);
   --shadow-md: 0 8px 24px rgba(139, 32, 75, 0.08);
 }
 
