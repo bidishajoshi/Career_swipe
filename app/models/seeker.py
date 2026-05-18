@@ -48,6 +48,10 @@ class Seeker(db.Model):
     is_verified        = db.Column(db.Boolean, default=False)
     age_verified       = db.Column(db.Boolean, default=False)
     legally_eligible   = db.Column(db.Boolean, default=False)
+    
+    # Work authorization
+    work_authorization = db.Column(db.String(100))  # citizen / permanent_resident / visa_sponsored / remote_international
+    
     created_at         = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -76,6 +80,8 @@ class Seeker(db.Model):
             'desired_roles':     self.desired_roles,
             'salary_expectation':self.salary_expectation,
             'availability':      self.availability,
+            'work_authorization': self.work_authorization,
             'is_verified':       self.is_verified,
+            'legally_eligible':  self.legally_eligible,
             'created_at':        self.created_at.isoformat() if self.created_at else None,
         }
