@@ -14,7 +14,7 @@ from werkzeug.exceptions import HTTPException
 from config import Config
 from extensions import db, migrate, mail
 from models import Seeker, Company, JobListing, JobSwipe, Notification
-from services import NotificationService, EligibilityService
+from app.services import NotificationService, EligibilityService
 from utils.tfidf import parse_resume, match_resume_to_job, extract_keywords
 from utils.ats import calculate_ats_score
 from utils.resume_parser import process_resume

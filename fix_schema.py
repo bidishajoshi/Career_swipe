@@ -90,6 +90,10 @@ def fix():
                 ("availability",      "VARCHAR(100)"),
                 ("verification_token","VARCHAR(100)"),
                 ("is_verified",       "BOOLEAN DEFAULT FALSE"),
+                ("age_verified",      "BOOLEAN DEFAULT FALSE"),
+                ("legally_eligible",  "BOOLEAN DEFAULT FALSE"),
+                ("country",           "VARCHAR(100)"),
+                ("work_authorization","VARCHAR(100)"),
             ]
             for col, defn in seekers_cols:
                 add_col(conn, 'seekers', col, defn)
@@ -107,6 +111,9 @@ def fix():
                 ("logo_path",          "VARCHAR(500)"),
                 ("verification_token", "VARCHAR(100)"),
                 ("is_verified",        "BOOLEAN DEFAULT FALSE"),
+                ("age_verified",       "BOOLEAN DEFAULT FALSE"),
+                ("legally_eligible",   "BOOLEAN DEFAULT FALSE"),
+                ("country",            "VARCHAR(100)"),
             ]
             for col, defn in employers_cols:
                 add_col(conn, 'employers', col, defn)

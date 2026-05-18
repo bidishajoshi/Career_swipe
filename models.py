@@ -49,6 +49,10 @@ class Seeker(db.Model):
     # Account status
     verification_token= db.Column(db.String(100))
     is_verified       = db.Column(db.Boolean, default=False)
+    age_verified      = db.Column(db.Boolean, default=False)
+    legally_eligible  = db.Column(db.Boolean, default=False)
+    country           = db.Column(db.String(100))
+    work_authorization = db.Column(db.String(100))
     created_at        = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -110,6 +114,9 @@ class Company(db.Model):
     # Account status
     verification_token = db.Column(db.String(100))
     is_verified    = db.Column(db.Boolean, default=False)
+    age_verified   = db.Column(db.Boolean, default=False)
+    legally_eligible = db.Column(db.Boolean, default=False)
+    country        = db.Column(db.String(100))
     created_at     = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships

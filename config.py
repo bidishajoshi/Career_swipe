@@ -24,8 +24,8 @@ class Config:
     SQLALCHEMY_DATABASE_URI = _raw_db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Require SSL only for remote databases (Render)
-    _is_remote = "localhost" not in _raw_db_url and "127.0.0.1" not in _raw_db_url
+    # Require SSL only for remote Postgres databases (Render)
+    _is_remote = "localhost" not in _raw_db_url and "127.0.0.1" not in _raw_db_url and not _raw_db_url.startswith("sqlite")
 
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_pre_ping": True,      # health-check before each query

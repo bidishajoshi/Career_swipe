@@ -34,7 +34,7 @@
     </div>
 
     <div class="auth-card">
-      <form method="POST" enctype="multipart/form-data" class="auth-form" id="application-form">
+      <form method="POST" enctype="multipart/form-data" class="auth-form" id="application-form" novalidate>
         
         <!-- STEP 2: MY INFORMATION -->
         <div class="step-content active" id="step-2">
@@ -333,16 +333,25 @@ function nextStep(step) {
   let valid = true;
   
   requiredFields.forEach(field => {
-    if (!field.value) {
-      field.style.borderColor = '#ef4444';
-      valid = false;
+    if (field.type === 'checkbox') {
+      if (!field.checked) {
+        field.parentElement.style.color = '#ef4444';
+        valid = false;
+      } else {
+        field.parentElement.style.color = 'inherit';
+      }
     } else {
-      field.style.borderColor = 'var(--border)';
+      if (!field.value || !field.checkValidity()) {
+        field.style.borderColor = '#ef4444';
+        valid = false;
+      } else {
+        field.style.borderColor = 'var(--border)';
+      }
     }
   });
 
   if (!valid) {
-    alert("Please fill in all required fields.");
+    alert("Please fill in all required fields correctly before proceeding.");
     return;
   }
 

@@ -279,9 +279,6 @@ def api_create_notification():
         }), 201
     else:
         return jsonify({'error': 'Failed to create notification'}), 500
-        .all()
-    )
-    return jsonify([n.to_dict() for n in notifs])
 
 
 # ── JSON API: Unread count ────────────────────────────────────────────────────
