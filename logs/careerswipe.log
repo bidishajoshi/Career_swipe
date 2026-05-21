@@ -1,0 +1,192 @@
+2026-05-21 20:00:37 - app - INFO - Logging initialized - Level: DEBUG - Environment: development
+2026-05-21 20:00:37 - app - INFO - Creating CareerSwipe app - Environment: development
+2026-05-21 20:00:38 - app - INFO - Database tables created/verified
+2026-05-21 20:00:38 - app - INFO - Legacy blueprints registered
+2026-05-21 20:00:39 - app - INFO - API blueprints registered
+2026-05-21 20:00:39 - app - INFO - CareerSwipe application created successfully
+2026-05-21 20:00:41 - app - INFO - Logging initialized - Level: DEBUG - Environment: development
+2026-05-21 20:00:41 - app - INFO - Creating CareerSwipe app - Environment: development
+2026-05-21 20:00:41 - app - INFO - Database tables created/verified
+2026-05-21 20:00:42 - app - INFO - Legacy blueprints registered
+2026-05-21 20:00:42 - app - INFO - API blueprints registered
+2026-05-21 20:00:42 - app - INFO - CareerSwipe application created successfully
+2026-05-21 20:01:45 - app - INFO - Logging initialized - Level: DEBUG - Environment: development
+2026-05-21 20:01:45 - app - INFO - Creating CareerSwipe app - Environment: development
+2026-05-21 20:01:45 - app - INFO - Database tables created/verified
+2026-05-21 20:01:45 - app - INFO - Legacy blueprints registered
+2026-05-21 20:01:45 - app - INFO - API blueprints registered
+2026-05-21 20:01:45 - app - INFO - CareerSwipe application created successfully
+2026-05-21 20:01:47 - app - INFO - Logging initialized - Level: DEBUG - Environment: development
+2026-05-21 20:01:47 - app - INFO - Creating CareerSwipe app - Environment: development
+2026-05-21 20:01:47 - app - INFO - Database tables created/verified
+2026-05-21 20:01:47 - app - INFO - Legacy blueprints registered
+2026-05-21 20:01:47 - app - INFO - API blueprints registered
+2026-05-21 20:01:47 - app - INFO - CareerSwipe application created successfully
+2026-05-21 20:02:10 - app.utils.errors - ERROR - Unhandled exception: Could not build url for endpoint 'login_seeker'. Did you mean 'api.auth.login_seeker' instead?
+Traceback (most recent call last):
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\app.py", line 109, in index
+    return render_template('index.html')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\jinja2\environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\VICTUS\Desktop\career-swipe\templates\index.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\VICTUS\Desktop\career-swipe\templates\base.html", line 74, in top-level template code
+    <a href="{{ url_for('login_seeker') }}" role="menuitem">Seeker Login</a>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\app.py", line 1084, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\app.py", line 1073, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'login_seeker'. Did you mean 'api.auth.login_seeker' instead?
+2026-05-21 20:02:10 - app.utils.errors - WARNING - HTTP 404: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-05-21 20:02:14 - app.utils.errors - ERROR - Unhandled exception: Could not build url for endpoint 'login_seeker'. Did you mean 'api.auth.login_seeker' instead?
+Traceback (most recent call last):
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\app.py", line 109, in index
+    return render_template('index.html')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\jinja2\environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\VICTUS\Desktop\career-swipe\templates\index.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\VICTUS\Desktop\career-swipe\templates\base.html", line 74, in top-level template code
+    <a href="{{ url_for('login_seeker') }}" role="menuitem">Seeker Login</a>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\app.py", line 1084, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\app.py", line 1073, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'login_seeker'. Did you mean 'api.auth.login_seeker' instead?
+2026-05-21 20:03:06 - app - INFO - Logging initialized - Level: DEBUG - Environment: development
+2026-05-21 20:03:06 - app - INFO - Creating CareerSwipe app - Environment: development
+2026-05-21 20:03:06 - app - INFO - Database tables created/verified
+2026-05-21 20:03:06 - app - INFO - Legacy blueprints registered
+2026-05-21 20:03:06 - app - INFO - API blueprints registered
+2026-05-21 20:03:06 - app - INFO - CareerSwipe application created successfully
+2026-05-21 20:03:28 - app - INFO - Logging initialized - Level: DEBUG - Environment: development
+2026-05-21 20:03:28 - app - INFO - Creating CareerSwipe app - Environment: development
+2026-05-21 20:03:28 - app - INFO - Database tables created/verified
+2026-05-21 20:03:29 - app - INFO - Legacy blueprints registered
+2026-05-21 20:03:29 - app - INFO - API blueprints registered
+2026-05-21 20:03:29 - app - INFO - CareerSwipe application created successfully
+2026-05-21 20:03:55 - app - INFO - Logging initialized - Level: DEBUG - Environment: development
+2026-05-21 20:03:55 - app - INFO - Creating CareerSwipe app - Environment: development
+2026-05-21 20:03:55 - app - INFO - Database tables created/verified
+2026-05-21 20:03:55 - app - INFO - Legacy blueprints registered
+2026-05-21 20:03:55 - app - INFO - API blueprints registered
+2026-05-21 20:03:55 - app - INFO - CareerSwipe application created successfully
+2026-05-21 20:04:17 - app - INFO - Logging initialized - Level: DEBUG - Environment: development
+2026-05-21 20:04:17 - app - INFO - Creating CareerSwipe app - Environment: development
+2026-05-21 20:04:17 - app - INFO - Database tables created/verified
+2026-05-21 20:04:17 - app - INFO - Legacy blueprints registered
+2026-05-21 20:04:17 - app - INFO - API blueprints registered
+2026-05-21 20:04:17 - app - INFO - CareerSwipe application created successfully
+2026-05-21 20:04:19 - app - INFO - Logging initialized - Level: DEBUG - Environment: development
+2026-05-21 20:04:19 - app - INFO - Creating CareerSwipe app - Environment: development
+2026-05-21 20:04:19 - app - INFO - Database tables created/verified
+2026-05-21 20:04:20 - app - INFO - Legacy blueprints registered
+2026-05-21 20:04:20 - app - INFO - API blueprints registered
+2026-05-21 20:04:20 - app - INFO - CareerSwipe application created successfully
+2026-05-21 20:04:57 - app.utils.errors - WARNING - HTTP 404: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-05-21 20:08:42 - app.utils.errors - ERROR - Unhandled exception: name 'secure_filename' is not defined
+Traceback (most recent call last):
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\app.py", line 207, in upload_resume_step
+    fname = secure_filename(f"{uuid.uuid4()}_{resume_file.filename}")
+            ^^^^^^^^^^^^^^^
+NameError: name 'secure_filename' is not defined
+2026-05-21 20:13:01 - app - INFO - Logging initialized - Level: DEBUG - Environment: development
+2026-05-21 20:13:01 - app - INFO - Creating CareerSwipe app - Environment: development
+2026-05-21 20:13:02 - app - INFO - Database tables created/verified
+2026-05-21 20:13:02 - app - INFO - Legacy blueprints registered
+2026-05-21 20:13:02 - app - INFO - API blueprints registered
+2026-05-21 20:13:02 - app - INFO - CareerSwipe application created successfully
+2026-05-21 20:13:12 - app.utils.errors - ERROR - Unhandled exception: name 'secure_filename' is not defined
+Traceback (most recent call last):
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\app.py", line 207, in upload_resume_step
+    fname = secure_filename(f"{uuid.uuid4()}_{resume_file.filename}")
+            ^^^^^^^^^^^^^^^
+NameError: name 'secure_filename' is not defined
+2026-05-21 20:14:45 - app - INFO - Logging initialized - Level: DEBUG - Environment: development
+2026-05-21 20:14:45 - app - INFO - Creating CareerSwipe app - Environment: development
+2026-05-21 20:14:45 - app - INFO - Database tables created/verified
+2026-05-21 20:14:46 - app - INFO - Legacy blueprints registered
+2026-05-21 20:14:46 - app - INFO - API blueprints registered
+2026-05-21 20:14:46 - app - INFO - CareerSwipe application created successfully
+2026-05-21 20:14:48 - app - INFO - Logging initialized - Level: DEBUG - Environment: development
+2026-05-21 20:14:48 - app - INFO - Creating CareerSwipe app - Environment: development
+2026-05-21 20:14:48 - app - INFO - Database tables created/verified
+2026-05-21 20:14:48 - app - INFO - Legacy blueprints registered
+2026-05-21 20:14:48 - app - INFO - API blueprints registered
+2026-05-21 20:14:48 - app - INFO - CareerSwipe application created successfully
+2026-05-21 20:51:13 - app.utils.errors - ERROR - Unhandled exception: name 'secure_filename' is not defined
+Traceback (most recent call last):
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\venv\Lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\VICTUS\Desktop\career-swipe\app.py", line 207, in upload_resume_step
+    fname = secure_filename(f"{uuid.uuid4()}_{resume_file.filename}")
+            ^^^^^^^^^^^^^^^
+NameError: name 'secure_filename' is not defined
+2026-05-21 20:55:55 - app - INFO - Logging initialized - Level: DEBUG - Environment: development
+2026-05-21 20:55:55 - app - INFO - Creating CareerSwipe app - Environment: development
+2026-05-21 20:55:55 - app - INFO - Database tables created/verified
+2026-05-21 20:55:55 - app - INFO - Legacy blueprints registered
+2026-05-21 20:55:55 - app - INFO - API blueprints registered
+2026-05-21 20:55:55 - app - INFO - CareerSwipe application created successfully
+2026-05-21 20:55:57 - app - INFO - Logging initialized - Level: DEBUG - Environment: development
+2026-05-21 20:55:57 - app - INFO - Creating CareerSwipe app - Environment: development
+2026-05-21 20:55:57 - app - INFO - Database tables created/verified
+2026-05-21 20:55:57 - app - INFO - Legacy blueprints registered
+2026-05-21 20:55:57 - app - INFO - API blueprints registered
+2026-05-21 20:55:57 - app - INFO - CareerSwipe application created successfully
