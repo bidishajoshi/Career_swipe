@@ -114,7 +114,7 @@ body.light-mode {
 
   /* Overrides for specific card states */
   --seeker-light: rgba(244, 114, 182, 0.1);
-  --company-light: rgba(251, 113, 133, 0.1);
+url(main.css)  --company-light: rgba(251, 113, 133, 0.1);
 
   /* Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.75);
