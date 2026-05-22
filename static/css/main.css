@@ -1251,7 +1251,7 @@ body.light-mode .file-upload-label {
 }
 
 .stat-box {
-  background: rgba(20, 43, 80, 0.5);
+  background: rgba(24, 52, 97, 0.5);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 12px 10px;
