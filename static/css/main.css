@@ -377,10 +377,18 @@ body.light-mode .theme-icon-light {
   border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
+body.light-mode .flash-success {
+  color: #059669;
+}
+
 .flash-error {
   background: rgba(239, 68, 68, 0.1);
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+body.light-mode .flash-error {
+  color: #dc2626;
 }
 
 @keyframes slideDown {
@@ -424,6 +432,10 @@ body.light-mode .theme-icon-light {
   box-shadow: 0 4px 20px var(--primary-glow);
 }
 
+body.light-mode .btn-primary {
+  color: #fff;
+}
+
 .btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 30px var(--primary-glow);
@@ -453,6 +465,10 @@ body.light-mode .theme-icon-light {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
   color: #fff;
   box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+body.light-mode .btn-company {
+  color: #fff;
 }
 
 .btn-company:hover {
@@ -489,6 +505,10 @@ body.light-mode .theme-icon-light {
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
+body.light-mode .btn-accept {
+  color: #059669;
+}
+
 .btn-accept:hover {
   background: var(--accent);
   color: #fff;
@@ -498,6 +518,10 @@ body.light-mode .theme-icon-light {
   background: rgba(239, 68, 68, 0.1);
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+body.light-mode .btn-reject {
+  color: #dc2626;
 }
 
 .btn-reject:hover {
@@ -880,6 +904,10 @@ body.light-mode .theme-icon-light {
   border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
+body.light-mode .badge-company {
+  color: #059669;
+}
+
 .auth-form {
   padding: 1.75rem 2rem 2rem;
 }
@@ -1241,6 +1269,10 @@ body.light-mode .file-upload-label {
   background: rgba(16, 185, 129, 0.1);
   color: #6ee7b7;
   border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+body.light-mode .company-pill {
+  color: #059669;
 }
 
 /* Stats */
