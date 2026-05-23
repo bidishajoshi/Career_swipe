@@ -1666,10 +1666,18 @@ body.light-mode .filter-input {
   border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
+body.light-mode .status-pending {
+  color: #b45309;
+}
+
 .status-shortlisted {
   background: rgba(124, 58, 237, 0.1);
   color: var(--purple-light);
   border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+body.light-mode .status-shortlisted {
+  color: #6d28d9;
 }
 
 .status-accepted {
@@ -1678,10 +1686,18 @@ body.light-mode .filter-input {
   border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
+body.light-mode .status-accepted {
+  color: #059669;
+}
+
 .status-rejected {
   background: rgba(239, 68, 68, 0.1);
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+body.light-mode .status-rejected {
+  color: #dc2626;
 }
 
 .status-interview {
@@ -2357,6 +2373,10 @@ body.light-mode .filter-input {
   box-shadow: 0 0 15px var(--primary-glow);
 }
 
+body.light-mode .step-item.active .step-dot {
+  color: #fff;
+}
+
 .step-item.active .step-label {
   color: var(--primary-light);
 }
@@ -2364,6 +2384,10 @@ body.light-mode .filter-input {
 .step-item.completed .step-dot {
   background: var(--accent);
   border-color: var(--accent);
+  color: #fff;
+}
+
+body.light-mode .step-item.completed .step-dot {
   color: #fff;
 }
 
