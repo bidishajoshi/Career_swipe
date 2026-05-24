@@ -1662,7 +1662,7 @@ body.light-mode .filter-input {
 
 .status-pending {
   background: rgba(245, 158, 11, 0.1);
-  color: #fbbf24;
+  color: #fbbc1e;
   border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
