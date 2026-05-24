@@ -1671,7 +1671,7 @@ body.light-mode .status-pending {
 }
 
 .status-shortlisted {
-  background: rgba(124, 58, 237, 0.1);
+  background: rgba(125, 59, 239, 0.1);
   color: var(--purple-light);
   border: 1px solid rgba(124, 58, 237, 0.2);
 }
