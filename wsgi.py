@@ -14,8 +14,10 @@ load_dotenv()
 # Add the project root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Import directly from the root app.py (the working monolith)
-from app import app
+# Use the factory pattern to create the Flask app
+from app import create_app
+
+app = create_app()
 
 # For production servers
 if __name__ == '__main__':
