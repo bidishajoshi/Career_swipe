@@ -19,7 +19,36 @@ from utils.tfidf import parse_resume, match_resume_to_job, extract_keywords
 from utils.ats import calculate_ats_score
 from utils.resume_parser import process_resume
 
+import os, sys
+from dotenv import load_dotenv
+
+load_dotenv()
+import uuid
+from datetime import datetime
+
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask_mail import Message
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+from werkzeug.exceptions import HTTPException
+
+from config import Config
+from extensions import db, migrate, mail
+from models import Seeker, Company, JobListing, JobSwipe, Notification
+from app.services import NotificationService, EligibilityService
+from utils.tfidf import parse_resume, match_resume_to_job, extract_keywords
+from utils.ats import calculate_ats_score
+from utils.resume_parser import process_resume
+
+from flask import Flask
+
 app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db.init_app(app)
+migrate.init_app(app, db)
+mail.init_app(app)
 app.config.from_object(Config)
 
 # Initialize extensions
