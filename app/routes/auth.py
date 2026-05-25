@@ -15,8 +15,8 @@ from werkzeug.utils import secure_filename
 
 from ..extensions import db
 from ..models import Seeker, Company
-from ..utils.helpers import allowed_file
-from ..utils.resume_parser import process_resume
+from utils.helpers import allowed_file
+from utils.resume_parser import process_resume
 
 auth_bp = Blueprint('auth', __name__)
 
