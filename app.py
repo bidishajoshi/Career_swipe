@@ -14,7 +14,7 @@ from werkzeug.exceptions import HTTPException
 from config import Config
 from extensions import db, migrate, mail
 from models import Seeker, Company, JobListing, JobSwipe, Notification
-from app.services import NotificationService, EligibilityService
+from apps.services import NotificationService, EligibilityService
 from utils.tfidf import parse_resume, match_resume_to_job, extract_keywords
 from utils.ats import calculate_ats_score
 from utils.resume_parser import process_resume
@@ -35,7 +35,7 @@ from werkzeug.exceptions import HTTPException
 from config import Config
 from extensions import db, migrate, mail
 from models import Seeker, Company, JobListing, JobSwipe, Notification
-from app.services import NotificationService, EligibilityService
+from apps.services import NotificationService, EligibilityService
 from utils.tfidf import parse_resume, match_resume_to_job, extract_keywords
 from utils.ats import calculate_ats_score
 from utils.resume_parser import process_resume
@@ -66,8 +66,8 @@ with app.app_context():
         print(f"Note: Database creation skipped or failed: {e}")
 
 # Register Blueprints
-from app.routes.notifications import notifications_bp
-from app.routes.eligibility import eligibility_bp
+from apps.routes.notifications import notifications_bp
+from apps.routes.eligibility import eligibility_bp
 
 app.register_blueprint(notifications_bp, url_prefix='')
 app.register_blueprint(eligibility_bp, url_prefix='')
