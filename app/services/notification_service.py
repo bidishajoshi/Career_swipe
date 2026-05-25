@@ -276,3 +276,18 @@ class NotificationService:
         except Exception as e:
             print(f'[NotificationService] Error checking should_notify: {e}')
             return False
+
+
+# ── Module-level wrapper functions for backward compatibility ──────────────────
+def create_notification(user_id: int, user_type: str, message: str, type: str = 'system') -> Optional:
+    """
+    Wrapper function for backward compatibility.
+    Create a notification for a user.
+    """
+    return NotificationService.create_notification(
+        recipient_id=user_id,
+        recipient_type=user_type,
+        title=type.replace('_', ' ').title(),
+        message=message,
+        notification_type=type,
+    )
