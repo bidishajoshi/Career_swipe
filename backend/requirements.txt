@@ -8,7 +8,7 @@ Flask-Mail==0.10.0
 Flask-CORS==4.0.0
 
 # Database
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.12
 SQLAlchemy==2.0.27
 
 # Security & Hashing

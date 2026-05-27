@@ -46,30 +46,39 @@ cd careerswipe
 
 ### 2. Create a virtual environment
 
-```bash
+```powershell
 python -m venv venv
-source venv\Scripts\Activate       # Windows: venv\Scripts\activate
+.\venv\Scripts\Activate.ps1
 ```
 
 ### 3. Install dependencies
 
-```bash
-pip install -r requirements.txt
+```powershell
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-### 4. Set up MySQL
+### 4. Set up the database
+
+By default this app expects a local PostgreSQL database. Create the database with:
 
 ```bash
-sqlite3 database.db < schema.sql
+psql -c "CREATE DATABASE careerswipe;"
 ```
 
-This creates the `careerswipe` database and all required tables.
+If you prefer a local SQLite fallback instead, set the connection string in `.env`:
+
+```bash
+DATABASE_URL=sqlite:///careerswipe.db
+```
+
+This creates the `careerswipe` database and all required tables when the app starts.
 
 ### 5. Configure environment variables
 
 ```bash
 cp .env.example .env
-# Edit .env with your MySQL credentials and Gmail App Password
+# Edit .env with your PostgreSQL credentials, or DATABASE_URL, plus Gmail App Password
 ```
 
 Then load them before running (or use python-dotenv):
