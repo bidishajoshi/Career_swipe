@@ -1,17 +1,24 @@
 """
 app/routes/company.py – Company-facing routes.
-Covers: company dashboard, post job, applicant status update.
+Covers: company dashboard, post job, applicant status update, profile management.
 """
+
+import os
+import uuid
+from werkzeug.security import generate_password_hash
+from werkzeug.utils import secure_filename
+from datetime import datetime
 
 from flask import (
     Blueprint, render_template, request, redirect,
-    url_for, session, flash,
+    url_for, session, flash, current_app,
 )
 
 from ..extensions import db
-from ..models import Company, JobListing, JobSwipe
+from ..models import Company, JobListing, JobSwipe, JobApplication, Notification
 from ..services.email_service import send_status_update_email
 from ..services.notification_service import create_notification
+from utils.helpers import allowed_file
 
 company_bp = Blueprint('company', __name__)
 

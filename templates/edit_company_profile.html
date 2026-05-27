@@ -1,0 +1,678 @@
+{% extends "base.html" %}
+{% block title %}Edit Company Profile – CareerSwipe{% endblock %}
+{% block content %}
+<div class="auth-wrap seeker-theme" style="max-width: 900px;">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h2>Company Profile</h2>
+      <p>Manage your company information and settings</p>
+    </div>
+
+    <!-- Profile Completion Meter -->
+    <div class="profile-completion-section">
+      <div class="completion-header">
+        <span>Profile Completion</span>
+        <span class="completion-percentage" id="completionPercentage">{{ company.profile_completion }}%</span>
+      </div>
+      <div class="completion-bar">
+        <div class="completion-fill" id="completionFill" style="width: {{ company.profile_completion }}%"></div>
+      </div>
+      <div class="completion-tips">
+        <p>Complete all sections to maximize visibility to top candidates</p>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="profile-tabs">
+      <button class="tab-btn active" data-tab="basic">Basic Info</button>
+      <button class="tab-btn" data-tab="description">Company Info</button>
+      <button class="tab-btn" data-tab="hiring">Hiring</button>
+      <button class="tab-btn" data-tab="media">Media & Social</button>
+      <button class="tab-btn" data-tab="verification">Verification</button>
+      <button class="tab-btn" data-tab="settings">Settings</button>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="profile-form" id="companyProfileForm">
+
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <!-- TAB 1: BASIC INFORMATION -->
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <div class="tab-content active" id="tab-basic">
+        <div class="form-section-label">Company Basic Information</div>
+        
+        <div class="field">
+          <label>Company Name *</label>
+          <input type="text" name="company_name" value="{{ company.company_name }}" required>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Official Email *</label>
+            <input type="email" name="email" value="{{ company.email }}" required disabled style="opacity: 0.6; cursor: not-allowed;">
+            <small style="color: #999;">Email cannot be changed</small>
+          </div>
+          <div class="field">
+            <label>Phone Number</label>
+            <input type="tel" name="phone" value="{{ company.phone or '' }}">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Company Founded Year</label>
+            <input type="number" name="founded_year" value="{{ company.founded_year or '' }}" min="1900" max="2099">
+          </div>
+          <div class="field">
+            <label>Number of Employees</label>
+            <select name="company_size">
+              <option value="">Select size...</option>
+              <option value="1-10" {% if company.company_size == '1-10' %}selected{% endif %}>1-10</option>
+              <option value="11-50" {% if company.company_size == '11-50' %}selected{% endif %}>11-50</option>
+              <option value="51-200" {% if company.company_size == '51-200' %}selected{% endif %}>51-200</option>
+              <option value="201-500" {% if company.company_size == '201-500' %}selected{% endif %}>201-500</option>
+              <option value="500+" {% if company.company_size == '500+' %}selected{% endif %}>500+</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Company Type *</label>
+            <select name="company_type" required>
+              <option value="">Select type...</option>
+              <option value="Startup" {% if company.company_type == 'Startup' %}selected{% endif %}>Startup</option>
+              <option value="Private" {% if company.company_type == 'Private' %}selected{% endif %}>Private</option>
+              <option value="Government" {% if company.company_type == 'Government' %}selected{% endif %}>Government</option>
+              <option value="NGO" {% if company.company_type == 'NGO' %}selected{% endif %}>NGO</option>
+              <option value="Enterprise" {% if company.company_type == 'Enterprise' %}selected{% endif %}>Enterprise</option>
+              <option value="Agency" {% if company.company_type == 'Agency' %}selected{% endif %}>Agency</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Industry Type *</label>
+            <select name="industry" required>
+              <option value="">Select industry...</option>
+              <option value="Information Technology" {% if company.industry == 'Information Technology' %}selected{% endif %}>Information Technology</option>
+              <option value="Finance & Banking" {% if company.industry == 'Finance & Banking' %}selected{% endif %}>Finance & Banking</option>
+              <option value="Healthcare" {% if company.industry == 'Healthcare' %}selected{% endif %}>Healthcare</option>
+              <option value="Education" {% if company.industry == 'Education' %}selected{% endif %}>Education</option>
+              <option value="E-commerce / Retail" {% if company.industry == 'E-commerce / Retail' %}selected{% endif %}>E-commerce / Retail</option>
+              <option value="Manufacturing" {% if company.industry == 'Manufacturing' %}selected{% endif %}>Manufacturing</option>
+              <option value="Media & Entertainment" {% if company.industry == 'Media & Entertainment' %}selected{% endif %}>Media & Entertainment</option>
+              <option value="Other" {% if company.industry == 'Other' %}selected{% endif %}>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Headquarters Location</label>
+            <input type="text" name="headquarters" value="{{ company.headquarters or '' }}">
+          </div>
+          <div class="field">
+            <label>Country of Operation *</label>
+            <input type="text" name="country" value="{{ company.country or '' }}" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Website URL</label>
+          <input type="url" name="website" value="{{ company.website or '' }}">
+        </div>
+
+        <div class="field">
+          <label>HR Contact Name</label>
+          <input type="text" name="hr_name" value="{{ company.hr_name or '' }}">
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <!-- TAB 2: COMPANY DESCRIPTION & CULTURE -->
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <div class="tab-content" id="tab-description">
+        <div class="form-section-label">Company Description & Culture</div>
+        
+        <div class="field">
+          <label>About Your Company</label>
+          <textarea name="description" rows="4" placeholder="Tell candidates what makes your company unique...">{{ company.description or '' }}</textarea>
+        </div>
+
+        <div class="field">
+          <label>Mission</label>
+          <textarea name="mission" rows="3" placeholder="What is your company's mission?">{{ company.mission or '' }}</textarea>
+        </div>
+
+        <div class="field">
+          <label>Vision</label>
+          <textarea name="vision" rows="3" placeholder="What is your company's vision for the future?">{{ company.vision or '' }}</textarea>
+        </div>
+
+        <div class="field">
+          <label>Company Culture</label>
+          <textarea name="culture" rows="4" placeholder="Describe your company culture, values, and work environment...">{{ company.culture or '' }}</textarea>
+        </div>
+
+        <div class="field">
+          <label>Benefits & Perks</label>
+          <textarea name="perks" rows="4" placeholder="List key benefits: Health Insurance, Remote Work, Flexible Hours, etc.">{{ company.perks or '' }}</textarea>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <!-- TAB 3: HIRING INFORMATION -->
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <div class="tab-content" id="tab-hiring">
+        <div class="form-section-label">Hiring Information</div>
+        
+        <div class="field">
+          <label>Hiring Frequency</label>
+          <select name="hiring_frequency">
+            <option value="">Select...</option>
+            <option value="Always" {% if company.hiring_frequency == 'Always' %}selected{% endif %}>Always Hiring</option>
+            <option value="Seasonal" {% if company.hiring_frequency == 'Seasonal' %}selected{% endif %}>Seasonal</option>
+            <option value="Occasional" {% if company.hiring_frequency == 'Occasional' %}selected{% endif %}>Occasional</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+              <input type="checkbox" name="remote_hiring" {% if company.remote_hiring %}checked{% endif %}>
+              <span>Open to Remote Hiring</span>
+            </label>
+          </div>
+          <div class="field">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+              <input type="checkbox" name="international_hiring" {% if company.international_hiring %}checked{% endif %}>
+              <span>International Hiring</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Preferred Hiring Locations</label>
+          <textarea name="preferred_locations" rows="3" placeholder="e.g. Kathmandu, Pokhara, Colombo (comma-separated)">{{ company.preferred_locations or '' }}</textarea>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <!-- TAB 4: MEDIA & SOCIAL LINKS -->
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <div class="tab-content" id="tab-media">
+        <div class="form-section-label">Company Logo & Banner</div>
+        
+        {% if company.logo_path %}
+        <div class="media-preview">
+          <div class="preview-item">
+            <label>Current Logo</label>
+            <img src="{{ company.logo_path }}" alt="Company Logo" class="logo-preview">
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="field">
+          <label>Replace Company Logo</label>
+          <label class="file-upload-label" for="logo-input">
+            <span class="upload-icon-wrap">🖼️</span>
+            <span><strong>Upload new logo</strong><br><small>PNG or JPG · Max 2MB</small></span>
+            <span class="file-name-display" id="logo-name">No file chosen</span>
+          </label>
+          <input type="file" name="logo" id="logo-input" accept=".png,.jpg,.jpeg,.webp" style="display:none">
+        </div>
+
+        {% if company.banner_path %}
+        <div class="media-preview">
+          <div class="preview-item">
+            <label>Current Banner</label>
+            <img src="{{ company.banner_path }}" alt="Company Banner" class="banner-preview" style="width: 100%; max-height: 200px;">
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="field">
+          <label>Replace Cover Banner</label>
+          <label class="file-upload-label" for="banner-input">
+            <span class="upload-icon-wrap">🖼️</span>
+            <span><strong>Upload new banner</strong><br><small>Recommended: 1200x400px · Max 3MB</small></span>
+            <span class="file-name-display" id="banner-name">No file chosen</span>
+          </label>
+          <input type="file" name="banner" id="banner-input" accept=".png,.jpg,.jpeg,.webp" style="display:none">
+        </div>
+
+        <div class="form-section-label" style="margin-top: 30px;">Social Media Links</div>
+
+        <div class="field">
+          <label>LinkedIn Company URL</label>
+          <input type="url" name="linkedin_url" value="{{ company.linkedin_url or '' }}" placeholder="https://linkedin.com/company/...">
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Facebook</label>
+            <input type="url" name="facebook_url" value="{{ company.facebook_url or '' }}" placeholder="https://facebook.com/...">
+          </div>
+          <div class="field">
+            <label>Instagram</label>
+            <input type="url" name="instagram_url" value="{{ company.instagram_url or '' }}" placeholder="https://instagram.com/...">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Twitter / X</label>
+            <input type="url" name="twitter_url" value="{{ company.twitter_url or '' }}" placeholder="https://twitter.com/...">
+          </div>
+          <div class="field">
+            <label>YouTube</label>
+            <input type="url" name="youtube_url" value="{{ company.youtube_url or '' }}" placeholder="https://youtube.com/...">
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <!-- TAB 5: VERIFICATION -->
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <div class="tab-content" id="tab-verification">
+        <div class="form-section-label">Company Verification</div>
+        
+        {% if company.is_verified %}
+        <div class="verification-badge verified">
+          <span>✓ Verified Company</span>
+          <p>Your company has been verified by our team.</p>
+        </div>
+        {% else %}
+        <div class="verification-badge pending">
+          <span>⏳ Verification Pending</span>
+          <p>Your verification document is being reviewed. This typically takes 1-2 business days.</p>
+        </div>
+        {% endif %}
+
+        <div class="field">
+          <label>Company Verification Document</label>
+          {% if company.verification_document %}
+          <div class="document-info">
+            <p>Current document: <strong>{{ company.verification_document.split('/')[-1] }}</strong></p>
+          </div>
+          {% endif %}
+          <label class="file-upload-label" for="verification-input">
+            <span class="upload-icon-wrap">📄</span>
+            <span><strong>Upload verification document</strong><br><small>Registration certificate, Tax ID, etc.</small></span>
+            <span class="file-name-display" id="verification-name">No file chosen</span>
+          </label>
+          <input type="file" name="verification_document" id="verification-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none">
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <!-- TAB 6: ACCOUNT SETTINGS -->
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <div class="tab-content" id="tab-settings">
+        <div class="form-section-label">Account Settings</div>
+        
+        <div class="settings-section">
+          <h4>Notifications</h4>
+          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+            <input type="checkbox" name="notification_enabled" {% if company.notification_enabled %}checked{% endif %}>
+            <span>Enable email notifications for new applications</span>
+          </label>
+        </div>
+
+        <div class="settings-section">
+          <h4>Activity</h4>
+          <p>Last login: <strong>{{ company.last_login.strftime('%Y-%m-%d %H:%M') if company.last_login else 'Never' }}</strong></p>
+          <p>Account created: <strong>{{ company.created_at.strftime('%Y-%m-%d') if company.created_at else 'Unknown' }}</strong></p>
+        </div>
+
+        <div class="settings-section danger-zone">
+          <h4 style="color: #dc3545;">Danger Zone</h4>
+          <button type="button" class="btn btn-danger" id="deleteAccountBtn">Delete Account</button>
+          <p style="font-size: 0.85em; color: #666; margin-top: 10px;">
+            <strong>Warning:</strong> Deleting your account is permanent and cannot be undone. All your jobs and data will be deleted.
+          </p>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <!-- ACTION BUTTONS -->
+      <!-- ════════════════════════════════════════════════════════════ -->
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-full">Save Changes</button>
+        <a href="{{ url_for('company.company_dashboard') }}" class="btn btn-secondary btn-full">Back to Dashboard</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal" id="deleteModal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Delete Account?</h3>
+      <button class="modal-close" id="closeDelete">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p><strong>This action cannot be undone!</strong></p>
+      <p>Deleting your account will:</p>
+      <ul>
+        <li>Remove all your job postings</li>
+        <li>Cancel all applications</li>
+        <li>Delete all company data</li>
+        <li>Close your recruiter account</li>
+      </ul>
+      <p>Are you absolutely sure?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelDelete">Cancel</button>
+      <form method="POST" action="{{ url_for('company.delete_account') }}" style="display: inline;">
+        <button type="submit" class="btn btn-danger">Yes, Delete My Account</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+.profile-completion-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.completion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.completion-percentage {
+  font-size: 1.3em;
+  color: #228be6;
+}
+
+.completion-bar {
+  width: 100%;
+  height: 10px;
+  background: #e0e0e0;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.completion-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #228be6, #47d764);
+  transition: width 0.3s ease;
+}
+
+.completion-tips {
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 10px;
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0;
+}
+
+.tab-btn {
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.tab-btn:hover,
+.tab-btn.active {
+  color: #228be6;
+  border-bottom-color: #228be6;
+}
+
+.tab-content {
+  display: none;
+  animation: slideIn 0.3s ease;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.media-preview {
+  margin-bottom: 20px;
+}
+
+.preview-item {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.preview-item label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.logo-preview {
+  max-width: 150px;
+  max-height: 150px;
+  object-fit: contain;
+}
+
+.banner-preview {
+  border-radius: 4px;
+}
+
+.settings-section {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.settings-section h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.settings-section.danger-zone {
+  background: #fff5f5;
+  border: 1px solid #ffebee;
+}
+
+.verification-badge {
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.verification-badge.verified {
+  background: #e7f5e5;
+  border: 1px solid #47d764;
+  color: #2d8a3d;
+}
+
+.verification-badge.pending {
+  background: #fff5e1;
+  border: 1px solid #ffa94d;
+  color: #ab6b00;
+}
+
+.verification-badge p {
+  margin: 10px 0 0 0;
+  font-weight: normal;
+  font-size: 0.9em;
+}
+
+.form-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: #999;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-body ul {
+  margin: 15px 0;
+  padding-left: 20px;
+}
+
+.modal-footer {
+  padding: 20px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+}
+
+.document-info {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  font-size: 0.9em;
+}
+</style>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const tabName = this.getAttribute('data-tab');
+    
+    // Remove active class from all tabs and contents
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+    
+    // Add active class to clicked tab and corresponding content
+    this.classList.add('active');
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+  });
+});
+
+// File input handlers
+['logo-input', 'banner-input', 'verification-input'].forEach(id => {
+  const elem = document.getElementById(id);
+  if (elem) {
+    elem.addEventListener('change', function() {
+      const displayId = id.replace('-input', '-name');
+      document.getElementById(displayId).textContent = this.files[0]?.name || 'No file chosen';
+    });
+  }
+});
+
+// Delete account modal
+const deleteBtn = document.getElementById('deleteAccountBtn');
+const deleteModal = document.getElementById('deleteModal');
+const closeDelete = document.getElementById('closeDelete');
+const cancelDelete = document.getElementById('cancelDelete');
+
+if (deleteBtn) {
+  deleteBtn.addEventListener('click', () => {
+    deleteModal.style.display = 'flex';
+  });
+}
+
+if (closeDelete) {
+  closeDelete.addEventListener('click', () => {
+    deleteModal.style.display = 'none';
+  });
+}
+
+if (cancelDelete) {
+  cancelDelete.addEventListener('click', () => {
+    deleteModal.style.display = 'none';
+  });
+}
+
+deleteModal.addEventListener('click', (e) => {
+  if (e.target === deleteModal) {
+    deleteModal.style.display = 'none';
+  }
+});
+
+// Form submission with loading state
+document.getElementById('companyProfileForm').addEventListener('submit', function(e) {
+  const btn = event.submitter;
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = btn.textContent.replace('Save', 'Saving...');
+  }
+});
+</script>
+{% endblock %}
