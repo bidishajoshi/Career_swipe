@@ -15,8 +15,8 @@ from werkzeug.utils import secure_filename
 
 from ..extensions import db
 from ..models import Seeker, Company
-from ..utils.helpers import allowed_file
-from ..utils.resume_parser import process_resume
+from utils.helpers import allowed_file
+from utils.resume_parser import process_resume
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -176,6 +176,14 @@ def register_company():
             flash('Email already registered.', 'error')
             return redirect(url_for('auth.register_company'))
 
+        # Validate passwords match
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        if password != confirm_password:
+            flash('Passwords do not match.', 'error')
+            return redirect(url_for('auth.register_company'))
+
+        # Handle logo upload
         logo_path = ''
         logo_file = request.files.get('logo')
         if logo_file and logo_file.filename and allowed_file(logo_file.filename, ALLOWED_LOGO):
@@ -183,20 +191,77 @@ def register_company():
             logo_path = os.path.join(current_app.config['LOGO_FOLDER'], fname)
             logo_file.save(logo_path)
 
+        # Handle banner upload
+        banner_path = ''
+        banner_file = request.files.get('banner')
+        if banner_file and banner_file.filename and allowed_file(banner_file.filename, ALLOWED_LOGO):
+            fname       = secure_filename(f'{uuid.uuid4()}_{banner_file.filename}')
+            banner_path = os.path.join(current_app.config['LOGO_FOLDER'], fname)
+            banner_file.save(banner_path)
+
+        # Handle verification document upload
+        verification_doc = ''
+        verification_file = request.files.get('verification_document')
+        if verification_file and verification_file.filename:
+            fname            = secure_filename(f'{uuid.uuid4()}_{verification_file.filename}')
+            verification_doc = os.path.join(current_app.config['UPLOAD_FOLDER'], fname)
+            verification_file.save(verification_doc)
+
+        # Create company with all fields
         company = Company(
-            company_name  = request.form['company_name'],
-            email         = email,
-            password_hash = generate_password_hash(request.form['password']),
-            description   = request.form.get('description', ''),
-            industry      = request.form.get('industry', ''),
-            website       = request.form.get('website', ''),
-            logo_path     = logo_path,
-            is_verified   = True,
+            # Basic Information
+            company_name     = request.form.get('company_name', ''),
+            email            = email,
+            password_hash    = generate_password_hash(password),
+            phone            = request.form.get('phone', ''),
+            hr_name          = request.form.get('hr_name', ''),
+            
+            # Company details
+            company_type     = request.form.get('company_type', ''),
+            industry         = request.form.get('industry', ''),
+            company_size     = request.form.get('company_size', ''),
+            founded_year     = request.form.get('founded_year', type=int) if request.form.get('founded_year') else None,
+            headquarters     = request.form.get('headquarters', ''),
+            country          = request.form.get('country', ''),
+            website          = request.form.get('website', ''),
+            
+            # Description sections
+            description      = request.form.get('description', ''),
+            mission          = request.form.get('mission', ''),
+            vision           = request.form.get('vision', ''),
+            culture          = request.form.get('culture', ''),
+            perks            = request.form.get('perks', ''),
+            
+            # Hiring information
+            hiring_frequency = request.form.get('hiring_frequency', ''),
+            remote_hiring    = 'remote_hiring' in request.form,
+            international_hiring = 'international_hiring' in request.form,
+            preferred_locations = request.form.get('preferred_locations', ''),
+            
+            # Media
+            logo_path        = logo_path,
+            banner_path      = banner_path,
+            verification_document = verification_doc,
+            
+            # Social links
+            linkedin_url     = request.form.get('linkedin_url', ''),
+            facebook_url     = request.form.get('facebook_url', ''),
+            instagram_url    = request.form.get('instagram_url', ''),
+            twitter_url      = request.form.get('twitter_url', ''),
+            youtube_url      = request.form.get('youtube_url', ''),
+            
+            # Status
+            profile_completion = 100,
+            is_verified      = True,
+            age_verified     = 'age_verified' in request.form,
+            legally_eligible = 'legally_eligible' in request.form,
+            notification_enabled = True,
         )
+        
         db.session.add(company)
         db.session.commit()
 
-        flash('Company registered!', 'success')
+        flash('Company registered successfully! You can now log in.', 'success')
         return redirect(url_for('auth.login_company'))
 
     return render_template('register_company.html')

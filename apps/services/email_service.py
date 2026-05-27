@@ -333,4 +333,30 @@ class EmailService:
             print(f'[EmailService] Error sending bulk emails: {e}')
             return sent_count
 
-        pass
+
+# ── Module-level wrapper functions for backward compatibility ──────────────────
+def send_application_emails(seeker_email: str, seeker_name: str, company_email: str, company_name: str, job_title: str, resume_path: Optional[str] = None) -> None:
+    """Send application notification emails to both company and seeker."""
+    EmailService.send_application_submitted(
+        seeker_email=seeker_email,
+        seeker_name=seeker_name,
+        company_email=company_email,
+        company_name=company_name,
+        job_title=job_title,
+        resume_path=resume_path,
+    )
+
+
+def send_status_update_email(company_email: str, company_name: str, seeker_name: str, job_title: str, new_status: str) -> None:
+    """Send status update email to company."""
+    EmailService.send_application_accepted(
+        company_email=company_email,
+        company_name=company_name,
+        seeker_name=seeker_name,
+        job_title=job_title,
+    ) if new_status == 'accepted' else EmailService.send_application_rejected(
+        company_email=company_email,
+        company_name=company_name,
+        seeker_name=seeker_name,
+        job_title=job_title,
+    )

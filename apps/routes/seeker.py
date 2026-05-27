@@ -16,9 +16,9 @@ from ..extensions import db
 from ..models import Seeker, JobListing, JobSwipe
 from ..services.email_service import send_application_emails
 from ..services.notification_service import create_notification
-from ..utils.helpers import allowed_file
-from ..utils.tfidf import parse_resume, match_resume_to_job, extract_keywords
-from ..utils.ats import calculate_ats_score
+from utils.helpers import allowed_file
+from utils.tfidf import parse_resume, match_resume_to_job, extract_keywords
+from utils.ats import calculate_ats_score
 
 seeker_bp = Blueprint('seeker', __name__)
 

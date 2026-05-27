@@ -3,7 +3,7 @@ services:
     name: careerswipe-backend
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn wsgi:app
+    startCommand: gunicorn wsgi:app --timeout 60
     healthCheckPath: /api/health
     healthCheckInterval: 300
     envVars:

@@ -114,7 +114,7 @@ body.light-mode {
 
   /* Overrides for specific card states */
   --seeker-light: rgba(244, 114, 182, 0.1);
-  --company-light: rgba(251, 113, 133, 0.1);
+url(main.css)  --company-light: rgba(251, 113, 133, 0.1);
 
   /* Glassmorphism */
   --glass-bg: rgba(255, 255, 255, 0.75);
@@ -377,10 +377,18 @@ body.light-mode .theme-icon-light {
   border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
+body.light-mode .flash-success {
+  color: #059669;
+}
+
 .flash-error {
   background: rgba(239, 68, 68, 0.1);
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+body.light-mode .flash-error {
+  color: #dc2626;
 }
 
 @keyframes slideDown {
@@ -424,6 +432,10 @@ body.light-mode .theme-icon-light {
   box-shadow: 0 4px 20px var(--primary-glow);
 }
 
+body.light-mode .btn-primary {
+  color: #fff;
+}
+
 .btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 30px var(--primary-glow);
@@ -453,6 +465,10 @@ body.light-mode .theme-icon-light {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
   color: #fff;
   box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+body.light-mode .btn-company {
+  color: #fff;
 }
 
 .btn-company:hover {
@@ -489,6 +505,10 @@ body.light-mode .theme-icon-light {
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
+body.light-mode .btn-accept {
+  color: #059669;
+}
+
 .btn-accept:hover {
   background: var(--accent);
   color: #fff;
@@ -498,6 +518,10 @@ body.light-mode .theme-icon-light {
   background: rgba(239, 68, 68, 0.1);
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+body.light-mode .btn-reject {
+  color: #dc2626;
 }
 
 .btn-reject:hover {
@@ -880,6 +904,10 @@ body.light-mode .theme-icon-light {
   border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
+body.light-mode .badge-company {
+  color: #059669;
+}
+
 .auth-form {
   padding: 1.75rem 2rem 2rem;
 }
@@ -1233,7 +1261,7 @@ body.light-mode .file-upload-label {
 
 .seeker-pill {
   background: rgba(59, 130, 246, 0.1);
-  color: var(--primary-light);
+  color: #ffffff;
   border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
@@ -1241,6 +1269,10 @@ body.light-mode .file-upload-label {
   background: rgba(16, 185, 129, 0.1);
   color: #6ee7b7;
   border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+body.light-mode .company-pill {
+  color: #089e6f;
 }
 
 /* Stats */
@@ -1251,7 +1283,7 @@ body.light-mode .file-upload-label {
 }
 
 .stat-box {
-  background: rgba(10, 22, 40, 0.5);
+  background: rgba(24, 52, 97, 0.5);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 12px 10px;
@@ -1630,14 +1662,22 @@ body.light-mode .filter-input {
 
 .status-pending {
   background: rgba(245, 158, 11, 0.1);
-  color: #fbbf24;
+  color: #fbbc1e;
   border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
+body.light-mode .status-pending {
+  color: #b45309;
+}
+
 .status-shortlisted {
-  background: rgba(124, 58, 237, 0.1);
+  background: rgba(125, 59, 239, 0.1);
   color: var(--purple-light);
   border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+body.light-mode .status-shortlisted {
+  color: #6d28d9;
 }
 
 .status-accepted {
@@ -1646,10 +1686,18 @@ body.light-mode .filter-input {
   border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
+body.light-mode .status-accepted {
+  color: #059669;
+}
+
 .status-rejected {
   background: rgba(239, 68, 68, 0.1);
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+body.light-mode .status-rejected {
+  color: #dc2626;
 }
 
 .status-interview {
@@ -2325,6 +2373,10 @@ body.light-mode .filter-input {
   box-shadow: 0 0 15px var(--primary-glow);
 }
 
+body.light-mode .step-item.active .step-dot {
+  color: #fff;
+}
+
 .step-item.active .step-label {
   color: var(--primary-light);
 }
@@ -2332,6 +2384,10 @@ body.light-mode .filter-input {
 .step-item.completed .step-dot {
   background: var(--accent);
   border-color: var(--accent);
+  color: #fff;
+}
+
+body.light-mode .step-item.completed .step-dot {
   color: #fff;
 }
 
