@@ -3088,8 +3088,10 @@ body.light-mode .status-interview {
 .btn-action.reject { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
 .btn-action.reject:hover { background: #ef4444; color: #fff; }
 
-.btn-action.interview { background: rgba(139, 42, 77, 0.15); color: #8b2a4d; border: 1px solid rgba(139, 42, 77, 0.4); }
-.btn-action.interview:hover { background: #8b2a4d; color: #fff; }
+.btn-action.interview { background: rgba(59, 130, 246, 0.1); color: var(--primary-light); border: 1px solid rgba(59, 130, 246, 0.2); }
+.btn-action.interview:hover { background: var(--primary); color: #fff; }
+body.light-mode .btn-action.interview { background: rgba(139, 42, 77, 0.15); color: #8b2a4d; border: 1px solid rgba(139, 42, 77, 0.4); }
+body.light-mode .btn-action.interview:hover { background: #8b2a4d; color: #fff; }
 
 .btn-action.accept { background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
 .btn-action.accept:hover { background: var(--company); color: #fff; }
