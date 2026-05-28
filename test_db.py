@@ -22,10 +22,11 @@ def test_connection():
     print(f"Attempting to connect to: {display_url}")
 
     try:
-        # For Cloud PostgreSQL (Supabase), we often need sslmode=require
         connect_args = {}
         if not db_url.startswith("sqlite"):
-            connect_args = {"sslmode": "require"}
+            is_remote = "render.com" in db_url or "supabase" in db_url or ("localhost" not in db_url and "127.0.0.1" not in db_url)
+            if is_remote:
+                connect_args = {"sslmode": "require"}
 
         engine = create_engine(db_url, connect_args=connect_args)
         
