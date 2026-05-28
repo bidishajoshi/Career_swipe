@@ -14,9 +14,10 @@ class Config:
     # ── Security ───────────────────────────────────────────────────────────────
     SECRET_KEY = os.environ.get('SECRET_KEY', 'careerswipe-dev-secret-CHANGE-IN-PROD')
 
-    # ── Database (PostgreSQL only) ─────────────────────────────────────────────
+    # ── Database ───────────────────────────────────────────────────────────────
     # Render provides DATABASE_URL starting with "postgres://"; SQLAlchemy
     # requires "postgresql://". The replace() call fixes this automatically.
+    # Falls back to local sqlite in dev/testing context if DATABASE_URL is not set.
     _raw = os.environ.get('DATABASE_URL', '')
     if _raw.startswith('postgres://'):
         _raw = _raw.replace('postgres://', 'postgresql://', 1)
@@ -24,12 +25,21 @@ class Config:
     SQLALCHEMY_DATABASE_URI = _raw
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    # Check database driver and target server to conditionally apply SSL settings
+    _is_sqlite = _raw.startswith('sqlite')
+    _is_postgres = _raw.startswith('postgresql')
+    _is_remote = _is_postgres and 'localhost' not in _raw and '127.0.0.1' not in _raw
+
     # Connection pool – safe for long-running PostgreSQL connections
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,       # health-check before each query
         'pool_recycle': 300,         # recycle connections every 5 min
-        'connect_args': {'sslmode': 'require'},
     }
+
+    if not _is_sqlite and _raw:
+        SQLALCHEMY_ENGINE_OPTIONS['connect_args'] = {
+            'sslmode': 'require' if _is_remote else 'prefer'
+        }
 
     # ── Mail (Gmail SMTP) ──────────────────────────────────────────────────────
     MAIL_SERVER         = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
@@ -49,15 +59,26 @@ class Config:
 class DevelopmentConfig(Config):
     """Local development – may relax SSL if needed."""
     DEBUG = True
+    
+    # Enable SQLite fallback if DATABASE_URL is not set or empty
+    _db_url = os.environ.get('DATABASE_URL', 'sqlite:///careerswipe.db')
+    if _db_url.startswith('postgres://'):
+        _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+        
+    SQLALCHEMY_DATABASE_URI = _db_url
+
+    _is_sqlite = _db_url.startswith('sqlite')
+    _is_postgres = _db_url.startswith('postgresql')
+    _is_remote = _is_postgres and 'localhost' not in _db_url and '127.0.0.1' not in _db_url
+
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
         'pool_recycle': 300,
-        # Only require SSL if DATABASE_URL is set (remote dev DB)
-        **(
-            {'connect_args': {'sslmode': 'require'}}
-            if os.environ.get('DATABASE_URL') else {}
-        ),
     }
+    if not _is_sqlite and _db_url:
+        SQLALCHEMY_ENGINE_OPTIONS['connect_args'] = {
+            'sslmode': 'require' if _is_remote else 'prefer'
+        }
 
 
 class ProductionConfig(Config):

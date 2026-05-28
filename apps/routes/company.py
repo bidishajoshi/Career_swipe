@@ -15,7 +15,7 @@ from flask import (
 )
 
 from ..extensions import db
-from ..models import Company, JobListing, JobSwipe, JobApplication, Notification
+from ..models import Company, JobListing, JobSwipe, Notification
 from ..services.email_service import send_status_update_email
 from ..services.notification_service import create_notification
 from utils.helpers import allowed_file

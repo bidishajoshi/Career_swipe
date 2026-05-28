@@ -42,7 +42,8 @@ def fix():
 
     print(f"[INFO] Connecting to: {db_url.split('@')[-1]}")
 
-    engine = create_engine(db_url, connect_args={"sslmode": "require"})
+    connect_args = {"sslmode": "require"} if db_url.startswith("postgresql") and "render.com" in db_url else {}
+    engine = create_engine(db_url, connect_args=connect_args)
 
     with engine.begin() as conn:
 
