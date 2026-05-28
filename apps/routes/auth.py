@@ -14,7 +14,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
 from ..extensions import db
-from ..models import Seeker, Company
+from ..models import Seeker, Company, EligibilityQuestion
+from ..services import EligibilityService
 from utils.helpers import allowed_file
 from utils.resume_parser import process_resume
 
@@ -103,6 +104,16 @@ def register_seeker():
     resume_data = session.get('resume_data', {})
     print(f'DEBUG session resume_data: {resume_data}', flush=True)
 
+    eligibility_questions = EligibilityQuestion.query.filter_by(
+        is_active=True
+    ).order_by(EligibilityQuestion.display_order).all()
+
+    if not eligibility_questions:
+        EligibilityService.create_eligibility_questions()
+        eligibility_questions = EligibilityQuestion.query.filter_by(
+            is_active=True
+        ).order_by(EligibilityQuestion.display_order).all()
+
     if request.method == 'POST':
         email = request.form['email'].strip().lower()
 
@@ -110,13 +121,45 @@ def register_seeker():
             flash('Email already registered.', 'error')
             return redirect(url_for('auth.register_seeker'))
 
+        required_fields = [
+            'first_name', 'last_name', 'email', 'password', 'phone',
+            'address', 'education', 'experience', 'experience_type',
+            'skills', 'career_field', 'desired_roles', 'employment_type',
+            'job_location_type', 'salary', 'availability'
+        ]
+        missing_fields = [field for field in required_fields if not request.form.get(field, '').strip()]
+        if missing_fields:
+            flash('Please complete all required fields before submitting your application.', 'error')
+            return redirect(url_for('auth.register_seeker'))
+
+        missing_answers = []
+        for question in eligibility_questions:
+            field_name = f'question_{question.id}'
+            value = request.form.get(field_name)
+            if question.is_mandatory and (not value or str(value).strip() == ''):
+                missing_answers.append(question.question_text)
+
+        if missing_answers:
+            flash(
+                'Please answer the required eligibility questions: ' + ', '.join(missing_answers),
+                'error'
+            )
+            return redirect(url_for('auth.register_seeker'))
+
         # Allow resume replacement at registration step
         resume_path = resume_data.get('resume_path', '')
         resume_file = request.files.get('resume')
-        if resume_file and resume_file.filename and allowed_file(resume_file.filename, ALLOWED_RESUME):
+        if resume_file and resume_file.filename:
+            if not allowed_file(resume_file.filename, ALLOWED_RESUME):
+                flash('Invalid resume file type. Please upload a PDF, DOC, or DOCX.', 'error')
+                return redirect(url_for('auth.register_seeker'))
             fname       = secure_filename(f'{uuid.uuid4()}_{resume_file.filename}')
             resume_path = os.path.join(current_app.config['RESUME_FOLDER'], fname)
             resume_file.save(resume_path)
+
+        if not resume_path:
+            flash('Resume is required. Please upload your resume before submitting.', 'error')
+            return redirect(url_for('auth.register_seeker'))
 
         seeker = Seeker(
             first_name        = request.form['first_name'],
@@ -138,6 +181,7 @@ def register_seeker():
             desired_roles     = request.form.get('desired_roles'),
             salary_expectation= request.form.get('salary'),
             availability      = request.form.get('availability'),
+            country           = request.form.get('country', ''),
             is_verified       = True,
         )
         db.session.add(seeker)
@@ -164,10 +208,13 @@ def register_seeker():
         job_location_type= resume_data.get('job_location_type'),
         desired_roles    = resume_data.get('desired_roles'),
         employment_type  = resume_data.get('employment_type'),
-        salary           = resume_data.get('salary'),
-        availability     = resume_data.get('availability'),
-        skills           = resume_data.get('skills'),
+        salary           = request.form.get('salary') if request.method == 'POST' else resume_data.get('salary'),
+        availability     = request.form.get('availability') if request.method == 'POST' else resume_data.get('availability'),
+        skills           = request.form.get('skills') if request.method == 'POST' else resume_data.get('skills'),
+        country          = request.form.get('country') if request.method == 'POST' else resume_data.get('country', ''),
+        source           = request.form.get('source') if request.method == 'POST' else '',
         resume_path      = resume_data.get('resume_path'),
+        eligibility_questions = [q.to_dict() for q in eligibility_questions],
     )
 
 

@@ -14,25 +14,35 @@ from ..models import JobListing
 jobs_bp = Blueprint('jobs', __name__)
 
 
-@jobs_bp.route('/jobs/post', methods=['GET', 'POST'])
+@jobs_bp.route('/jobs/post', methods=['GET', 'POST'], endpoint='post_job')
 def post_job():
     if 'company_id' not in session:
         return redirect(url_for('auth.login_company'))
 
     if request.method == 'POST':
+        try:
+            number_of_positions = int(request.form.get('number_of_positions', '1'))
+        except (TypeError, ValueError):
+            number_of_positions = 0
+
+        if number_of_positions < 1:
+            flash('Please enter a valid number of hires for this job.', 'error')
+            return redirect(url_for('post_job'))
+
         job = JobListing(
-            company_id        = session['company_id'],
-            title             = request.form['title'],
-            description       = request.form['description'],
-            required_skills   = request.form.get('required_skills', ''),
-            location          = request.form.get('location', ''),
-            job_type          = request.form.get('job_type', 'Full-time'),
-            job_location_type = request.form.get('job_location_type', 'Onsite'),
-            experience_level  = request.form.get('experience_level', 'Entry Level'),
-            min_experience    = request.form.get('min_experience', 0, type=int),
-            salary            = request.form.get('salary', ''),
-            max_salary        = request.form.get('max_salary', 0, type=int),
-            tags              = request.form.get('tags', ''),
+            company_id          = session['company_id'],
+            title               = request.form['title'],
+            description         = request.form['description'],
+            required_skills     = request.form.get('required_skills', ''),
+            location            = request.form.get('location', ''),
+            job_type            = request.form.get('job_type', 'Full-time'),
+            job_location_type   = request.form.get('job_location_type', 'Onsite'),
+            experience_level    = request.form.get('experience_level', 'Entry Level'),
+            min_experience      = request.form.get('min_experience', 0, type=int),
+            salary              = request.form.get('salary', ''),
+            max_salary          = request.form.get('max_salary', 0, type=int),
+            number_of_positions = number_of_positions,
+            tags                = request.form.get('tags', ''),
         )
         db.session.add(job)
         db.session.commit()

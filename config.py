@@ -33,7 +33,7 @@ class Config:
         "pool_recycle": 300,        # recycle connections every 5 min
         "pool_timeout": 10,         # max 10s waiting for a pool connection
         "connect_args": {
-            **({"sslmode": "require"} if _is_remote else {}),
+            **({"sslmode": "require"} if _is_remote and "sslmode=" not in _raw_db_url else {}),
             "connect_timeout": 10,  # fail fast if DB is unreachable
         },
     }

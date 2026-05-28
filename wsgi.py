@@ -15,7 +15,7 @@ load_dotenv()
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Use the factory pattern to create the Flask app
-from app import create_app
+from apps import create_app
 
 app = create_app()
 

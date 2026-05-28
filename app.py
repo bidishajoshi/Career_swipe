@@ -18,6 +18,7 @@ from models import (
     UploadedResume, RecommendationHistory, SavedJob, RecentlyViewedJob
 )
 from apps.services import NotificationService, EligibilityService
+from apps.models import EligibilityQuestion
 from utils.tfidf import (
     parse_resume, match_resume_to_job, extract_keywords, extract_skills,
     recommend_jobs_for_resume
@@ -338,6 +339,10 @@ def register_seeker():
     # Debugging Step
     print(f"DEBUG: Session data in register_seeker: {resume_data}", flush=True)
     
+    eligibility_questions = EligibilityQuestion.query.filter_by(
+        is_active=True
+    ).order_by(EligibilityQuestion.display_order).all()
+
     if request.method == "POST":
         email = request.form["email"].strip().lower()
 
@@ -351,6 +356,24 @@ def register_seeker():
         
         if not age_verified or not legally_eligible:
             flash("You must confirm you are 18+ and eligible to work.", "error")
+            return redirect(url_for("register_seeker"))
+
+        missing_answers = []
+        for question in eligibility_questions:
+            field_name = f"question_{question.id}"
+            value = request.form.get(field_name)
+            if question.is_mandatory:
+                if question.field_type == "checkbox":
+                    if not value:
+                        missing_answers.append(question.question_text)
+                elif not value or str(value).strip() == "":
+                    missing_answers.append(question.question_text)
+
+        if missing_answers:
+            flash(
+                "Please answer the required eligibility questions: " + ", ".join(missing_answers),
+                "error"
+            )
             return redirect(url_for("register_seeker"))
 
         resume_path = resume_data.get("resume_path", "")
@@ -423,7 +446,8 @@ def register_seeker():
                            salary=resume_data.get("salary"),
                            availability=resume_data.get("availability"),
                            skills=resume_data.get("skills"),
-                           resume_path=resume_data.get("resume_path"))
+                           resume_path=resume_data.get("resume_path"),
+                           eligibility_questions=[q.to_dict() for q in eligibility_questions])
 
 
 @app.route("/register/company", methods=["GET", "POST"])
@@ -435,20 +459,15 @@ def register_company():
             flash("Email already registered.", "error")
             return redirect(url_for("register_company"))
 
-        # Verify eligibility and legal status
-        age_verified = request.form.get("age_verified") == "on"
-        legally_eligible = request.form.get("legally_eligible") == "on"
-        
-        if not age_verified or not legally_eligible:
-            flash("Your company must confirm it is legally eligible to operate.", "error")
-            return redirect(url_for("register_company"))
-
         logo_file = request.files.get("logo")
         logo_path = ""
         if logo_file and logo_file.filename and allowed_file(logo_file.filename, ALLOWED_LOGO):
             fname = secure_filename(f"{uuid.uuid4()}_{logo_file.filename}")
             logo_path = os.path.join(app.config["LOGO_FOLDER"], fname)
             logo_file.save(logo_path)
+        else:
+            flash("Please upload a valid company logo.", "error")
+            return redirect(url_for("register_company"))
 
         new_company = Company(
             company_name=request.form["company_name"],
@@ -460,14 +479,15 @@ def register_company():
             country=request.form.get("country", ""),
             logo_path=logo_path,
             is_verified=True,
-            age_verified=age_verified,
-            legally_eligible=legally_eligible
+            age_verified=request.form.get("age_verified") == "on",
+            legally_eligible=request.form.get("legally_eligible") == "on"
         )
         db.session.add(new_company)
         db.session.commit()
 
         flash("Company registered!", "success")
         return redirect(url_for("login_company"))
+
     return render_template("register_company.html")
 
 
@@ -521,11 +541,13 @@ def seeker_dashboard():
     swiped_job_ids = [swipe.job_id for swipe in seeker.swipes]
 
     # ── Indeed-style Filters ──
-    job_type      = request.args.get("job_type")
-    exp_level     = request.args.get("experience_level")
-    location_type = request.args.get("location_type")
-    location      = request.args.get("location")
-    min_sal       = request.args.get("min_salary", type=int)
+    job_type          = request.args.get("job_type")
+    exp_level         = request.args.get("experience_level")
+    location_type     = request.args.get("location_type")
+    location          = request.args.get("location")
+    min_sal           = request.args.get("min_salary", type=int)
+    min_skill_match   = request.args.get("min_skill_match", type=int)
+    min_matched_skills = request.args.get("min_matched_skills", type=int)
 
     query = JobListing.query
     if swiped_job_ids:
@@ -558,6 +580,16 @@ def seeker_dashboard():
         item for item in recommendations
         if is_relevant_recommendation(seeker, item)
     ]
+    if min_skill_match is not None:
+        recommendations = [
+            item for item in recommendations
+            if item["skill_match_percentage"] >= min_skill_match
+        ]
+    if min_matched_skills is not None:
+        recommendations = [
+            item for item in recommendations
+            if len(item["matched_skills"]) >= min_matched_skills
+        ]
     if recommendations:
         save_recommendation_history(seeker.id, active_resume.id if active_resume else None, recommendations)
 
@@ -588,6 +620,7 @@ def seeker_dashboard():
             "match_score":      item["match_percentage"],
             "similarity_score": item["similarity_score"],
             "matched_skills":   item["matched_skills"],
+            "matched_skills_count": len(item["matched_skills"]),
             "missing_skills":   item["missing_skills"],
             "recommended_skills": item["recommended_skills"],
             "skill_match_percentage": item["skill_match_percentage"],
@@ -869,6 +902,18 @@ def company_dashboard():
         .all()
     )
 
+    job_application_counts = {job.id: 0 for job in jobs}
+    job_accepted_counts = {job.id: 0 for job in jobs}
+    for sw in swipes:
+        if sw.job_id in job_application_counts:
+            job_application_counts[sw.job_id] += 1
+            if sw.status == "accepted":
+                job_accepted_counts[sw.job_id] += 1
+
+    for job in jobs:
+        job.application_count = job_application_counts.get(job.id, 0)
+        job.accepted_count = job_accepted_counts.get(job.id, 0)
+
     applicants = [
         {
             "seeker_id":   sw.seeker.id,
@@ -901,6 +946,15 @@ def post_job():
         return redirect(url_for("login_company"))
 
     if request.method == "POST":
+        try:
+            number_of_positions = int(request.form.get("number_of_positions", "1"))
+        except (TypeError, ValueError):
+            number_of_positions = 0
+
+        if number_of_positions < 1:
+            flash("Please enter a valid number of hires for this job.", "error")
+            return redirect(url_for("post_job"))
+
         new_job = JobListing(
             company_id=session["company_id"],
             title=request.form["title"],
@@ -913,6 +967,7 @@ def post_job():
             min_experience=request.form.get("min_experience", 0, type=int),
             salary=request.form.get("salary", ""),
             max_salary=request.form.get("max_salary", 0, type=int),
+            number_of_positions=number_of_positions,
             tags=request.form.get("tags", ""),
         )
         db.session.add(new_job)
@@ -945,6 +1000,8 @@ def update_applicant(swipe_id, action):
     job    = swipe.job_listing
     action_text = action_map.get(action, action + "ed")
 
+    positions_needed = job.number_of_positions or 1
+
     msg = Message(f"Update on your application: {job.title}", recipients=[seeker.email])
     msg.html = f"""
     <div style="font-family:sans-serif;max-width:520px;margin:auto;background:#0f172a;padding:2rem;border-radius:16px;color:#fff">
@@ -957,8 +1014,6 @@ def update_applicant(swipe_id, action):
         mail.send(msg)
     except Exception:
         pass
-
-    flash(f"Applicant {action_text}.", "success")
 
     # ✅ Trigger seeker notification
     notif_msg = f"Your application for {job.title} at {job.company.company_name} has been {action_text}."
@@ -974,6 +1029,16 @@ def update_applicant(swipe_id, action):
         type=action
     )
 
+    if action == "accept":
+        accepted_count = JobSwipe.query.filter_by(job_id=job.id, status='accepted').count()
+        if accepted_count >= positions_needed:
+            job_title = job.title
+            db.session.delete(job)
+            db.session.commit()
+            flash(f"Applicant {action_text}. Job '{job_title}' is now filled and has been closed.", "success")
+            return redirect(url_for("company_dashboard"))
+
+    flash(f"Applicant {action_text}.", "success")
     return redirect(url_for("company_dashboard"))
 
 
@@ -1004,10 +1069,14 @@ def get_notifications():
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
 
+    limit = request.args.get("limit", 20, type=int)
+    if limit < 1:
+        limit = 20
+
     notifs = (
         Notification.query.filter_by(user_id=user_id, user_type=user_type)
         .order_by(Notification.created_at.desc())
-        .limit(10)
+        .limit(limit)
         .all()
     )
 

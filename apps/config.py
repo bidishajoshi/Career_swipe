@@ -28,9 +28,13 @@ class Config:
         "pool_recycle": 300,
     }
     if not _is_sqlite and _raw:
-        SQLALCHEMY_ENGINE_OPTIONS["connect_args"] = {
-            "sslmode": "require" if _is_remote else "prefer"
-        }
+        _connect_args = {}
+        if _is_remote and "sslmode=" not in _raw:
+            _connect_args["sslmode"] = "require"
+        elif not _is_remote:
+            _connect_args["sslmode"] = "prefer"
+        if _connect_args:
+            SQLALCHEMY_ENGINE_OPTIONS["connect_args"] = _connect_args
 
     MAIL_SERVER = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
     MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))

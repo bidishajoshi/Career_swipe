@@ -185,6 +185,7 @@ class JobListing(db.Model):
     experience_required = db.Column(db.String(100))                       # human-readable (e.g. "2-3 years")
     salary           = db.Column(db.String(100))
     max_salary       = db.Column(db.Integer)
+    number_of_positions = db.Column(db.Integer, default=1, nullable=False)
     tags             = db.Column(db.Text)                                  # comma-separated keywords
     is_boosted       = db.Column(db.Boolean, default=False)
     created_at       = db.Column(db.DateTime, default=datetime.utcnow)
@@ -216,6 +217,8 @@ class JobListing(db.Model):
             'experience_level': self.experience_level,
             'experience_required': self.experience_required,
             'salary': self.salary,
+            'max_salary': self.max_salary,
+            'number_of_positions': self.number_of_positions,
             'is_boosted': self.is_boosted,
             'created_at': self.created_at.isoformat() if self.created_at else None,
         }

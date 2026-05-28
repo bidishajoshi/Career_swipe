@@ -43,7 +43,7 @@ def _require_company():
 
 
 # ── Company Dashboard ─────────────────────────────────────────────────────────
-@company_bp.route('/dashboard/company')
+@company_bp.route('/dashboard/company', endpoint='company_dashboard')
 def company_dashboard():
     company = _require_company()
     if not company:
@@ -66,6 +66,18 @@ def company_dashboard():
         .order_by(JobSwipe.created_at.desc())
         .all()
     )
+
+    job_application_counts = {job.id: 0 for job in jobs}
+    job_accepted_counts = {job.id: 0 for job in jobs}
+    for sw in swipes:
+        if sw.job_id in job_application_counts:
+            job_application_counts[sw.job_id] += 1
+            if sw.status == 'accepted':
+                job_accepted_counts[sw.job_id] += 1
+
+    for job in jobs:
+        job.application_count = job_application_counts.get(job.id, 0)
+        job.accepted_count = job_accepted_counts.get(job.id, 0)
 
     applicants = [
         {
@@ -94,7 +106,7 @@ def company_dashboard():
 
 
 # ── Update Applicant Status ───────────────────────────────────────────────────
-@company_bp.route('/applicant/<int:swipe_id>/<action>')
+@company_bp.route('/applicant/<int:swipe_id>/<action>', endpoint='update_applicant')
 def update_applicant(swipe_id, action):
     company = _require_company()
     if not company:
@@ -115,6 +127,7 @@ def update_applicant(swipe_id, action):
 
     seeker = swipe.seeker
     job    = swipe.job_listing
+    positions_needed = job.number_of_positions or 1
 
     # Send status-update email to seeker
     send_status_update_email(
@@ -148,6 +161,32 @@ def update_applicant(swipe_id, action):
         message   = notif_msg,
         type      = action,
     )
+
+    if action == 'accept':
+        accepted_count = JobSwipe.query.filter_by(job_id=job.id, status='accepted').count()
+        if accepted_count >= positions_needed:
+            job_title = job.title
+            db.session.delete(job)
+            db.session.commit()
+            flash(
+                f'Applicant {action_text}. Job "{job_title}" is now filled and has been closed.',
+                'success',
+            )
+            return redirect(url_for('company.company_dashboard'))
+
+    flash(f'Applicant {action_text}.', 'success')
+    return redirect(url_for('company.company_dashboard'))
+
+        accepted_count = JobSwipe.query.filter_by(job_id=job.id, status='accepted').count()
+        if accepted_count >= positions_needed:
+            job_title = job.title
+            db.session.delete(job)
+            db.session.commit()
+            flash(
+                f'Applicant {action_text}. Job "{job_title}" is now filled and has been closed.',
+                'success',
+            )
+            return redirect(url_for('company.company_dashboard'))
 
     flash(f'Applicant {action_text}.', 'success')
     return redirect(url_for('company.company_dashboard'))

@@ -92,6 +92,18 @@
                  value="{{ request.args.get('min_salary', '') }}"
                  style="max-width:110px">
 
+          <input type="number" name="min_skill_match" class="filter-input"
+                 placeholder="Min Skill %" aria-label="Minimum skill match percent"
+                 min="0" max="100"
+                 value="{{ request.args.get('min_skill_match', '') }}"
+                 style="max-width:110px">
+
+          <input type="number" name="min_matched_skills" class="filter-input"
+                 placeholder="Min matched skills" aria-label="Minimum matched skills count"
+                 min="0"
+                 value="{{ request.args.get('min_matched_skills', '') }}"
+                 style="max-width:140px">
+
           <button type="submit" class="btn btn-primary btn-sm" id="filterBtn">Filter</button>
           <a href="{{ url_for('seeker_dashboard') }}" class="btn btn-outline-dark btn-sm">Clear</a>
         </form>
@@ -146,7 +158,7 @@
                     {% if job.skill_match > 0 %}
                     <div class="score-indicator" title="Skill match: {{ job.skill_match }}%"
                          style="font-size: 11px; background: rgba(33, 150, 243, 0.8); padding: 4px 8px; border-radius: 12px; color: white; font-weight: bold;">
-                      ⚙️ {{ job.skill_match }}%
+                      ⚙️ {{ job.skill_match }}%{% if job.matched_skills_count %} · {{ job.matched_skills_count }} skills{% endif %}
                     </div>
                     {% endif %}
                     

@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """Quick database viewer - Run with: python view_db.py"""
 import os
-from app import app, db
+from apps import create_app
 from models import Seeker, Company, JobListing, JobSwipe, Notification
-# view_db.py
-from app import create_app, db
 
 app = create_app()
 
