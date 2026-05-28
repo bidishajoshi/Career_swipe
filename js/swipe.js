@@ -22,6 +22,7 @@
   let lastTime    = 0;
   let activeCard  = null;
   let isBusy      = false;   // debounce rapid swipes
+  let rafId       = 0;
 
   const SWIPE_THRESHOLD  = 80;   // px before triggering swipe
   const VELOCITY_THRESHOLD = 0.4; // px/ms – fast flick triggers swipe
@@ -33,6 +34,10 @@
   }
 
   function resetCard(card) {
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
     card.style.transform  = '';
     card.style.transition = '';
     card.classList.remove('swiping-right', 'swiping-left');
@@ -40,7 +45,11 @@
 
   function setDragState(card, deltaX) {
     const rotate = deltaX * 0.07;
-    card.style.transform = `translateX(${deltaX}px) rotate(${rotate}deg)`;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(() => {
+      card.style.transform = `translate3d(${deltaX}px, 0, 0) rotate(${rotate}deg)`;
+      rafId = 0;
+    });
 
     if (deltaX > 50) {
       card.classList.add('swiping-right');
@@ -54,7 +63,83 @@
   }
 
   /* ── Mouse drag ───────────────────────────────────────────────────────── */
+  function startDrag(card, clientX, clientY, pointerId) {
+    if (!card || card !== getTopCard() || isBusy) return false;
+
+    isDragging = true;
+    activeCard = card;
+    startX     = clientX;
+    startY     = clientY;
+    lastX      = clientX;
+    lastTime   = Date.now();
+    currentX   = 0;
+    velocity   = 0;
+    card.style.transition = 'none';
+
+    if (pointerId !== undefined && card.setPointerCapture) {
+      try { card.setPointerCapture(pointerId); } catch (err) {}
+    }
+    return true;
+  }
+
+  function moveDrag(clientX) {
+    if (!isDragging || !activeCard) return;
+    const now = Date.now();
+    const dt  = now - lastTime;
+    if (dt > 0) velocity = (clientX - lastX) / dt;
+    lastX    = clientX;
+    lastTime = now;
+    currentX = clientX - startX;
+    setDragState(activeCard, currentX);
+  }
+
+  function finishDrag() {
+    if (!isDragging || !activeCard) return;
+    isDragging = false;
+
+    const card = activeCard;
+    const absV = Math.abs(velocity);
+    if (currentX > SWIPE_THRESHOLD || (absV > VELOCITY_THRESHOLD && currentX > 20)) {
+      doSwipe(card, 'right');
+    } else if (currentX < -SWIPE_THRESHOLD || (absV > VELOCITY_THRESHOLD && currentX < -20)) {
+      doSwipe(card, 'left');
+    } else {
+      card.style.transition = 'transform 0.4s cubic-bezier(0.23, 1, 0.32, 1)';
+      resetCard(card);
+    }
+
+    activeCard = null;
+    currentX   = 0;
+    velocity   = 0;
+  }
+
+  if (window.PointerEvent) {
+    stack.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      const card = e.target.closest('.job-card');
+      if (startDrag(card, e.clientX, e.clientY, e.pointerId)) {
+        e.preventDefault();
+      }
+    });
+
+    stack.addEventListener('pointermove', e => {
+      if (!isDragging || !activeCard) return;
+      moveDrag(e.clientX);
+      if (Math.abs(currentX) > 8) e.preventDefault();
+    });
+
+    stack.addEventListener('pointerup', finishDrag);
+    stack.addEventListener('pointercancel', () => {
+      if (activeCard) resetCard(activeCard);
+      isDragging = false;
+      activeCard = null;
+      currentX = 0;
+      velocity = 0;
+    });
+  }
+
   stack.addEventListener('mousedown', e => {
+    if (window.PointerEvent) return;
     const card = e.target.closest('.job-card');
     if (!card || card !== getTopCard() || isBusy) return;
 
@@ -70,6 +155,7 @@
   });
 
   document.addEventListener('mousemove', e => {
+    if (window.PointerEvent) return;
     if (!isDragging || !activeCard) return;
     const now   = Date.now();
     const dt    = now - lastTime;
@@ -82,6 +168,7 @@
   });
 
   document.addEventListener('mouseup', () => {
+    if (window.PointerEvent) return;
     if (!isDragging || !activeCard) return;
     isDragging = false;
 
@@ -105,6 +192,7 @@
   let touchLocked = false;  // prevent vertical scroll interference
 
   stack.addEventListener('touchstart', e => {
+    if (window.PointerEvent) return;
     const card = e.target.closest('.job-card');
     if (!card || card !== getTopCard() || isBusy) return;
 
@@ -122,6 +210,7 @@
   }, { passive: true });
 
   stack.addEventListener('touchmove', e => {
+    if (window.PointerEvent) return;
     if (!isDragging || !activeCard) return;
 
     const tx = e.touches[0].clientX;
@@ -159,6 +248,7 @@
   }, { passive: false });
 
   stack.addEventListener('touchend', () => {
+    if (window.PointerEvent) return;
     if (!isDragging || !activeCard) return;
     isDragging = false;
 
@@ -202,6 +292,10 @@
   function doSwipe(card, direction) {
     if (isBusy) return;
     isBusy = true;
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
 
     const jobId = card.dataset.jobId;
 

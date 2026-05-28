@@ -5,22 +5,47 @@ load_dotenv()
 import uuid
 from datetime import datetime
 
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory
 from flask_mail import Message
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import HTTPException
 
-from config import Config
-from extensions import db, migrate, mail
-from models import Seeker, Company, JobListing, JobSwipe, Notification
+from apps.config import Config
+from apps.extensions import db, migrate, mail
+from apps.models import (
+    Seeker, Company, JobListing, JobSwipe, Notification
+)
 from apps.services import NotificationService, EligibilityService
-from utils.tfidf import parse_resume, match_resume_to_job, extract_keywords
+from utils.tfidf import (
+    parse_resume, match_resume_to_job, extract_keywords, extract_skills,
+    recommend_jobs_for_resume
+)
 from utils.ats import calculate_ats_score
 from utils.resume_parser import process_resume
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=None)
 app.config.from_object(Config)
+
+
+@app.route("/static/<path:filename>", endpoint="static")
+def static_files(filename):
+    """Serve existing asset folders without changing frontend paths or CSS."""
+    normalized = filename.replace("\\", "/")
+    static_root = os.path.join(app.root_path, "static")
+    static_path = os.path.abspath(os.path.join(static_root, normalized))
+    if static_path.startswith(os.path.abspath(static_root)) and os.path.exists(static_path):
+        return send_from_directory(static_root, normalized)
+
+    safe_roots = {
+        "css/": os.path.join(app.root_path, "css"),
+        "js/": os.path.join(app.root_path, "js"),
+        "uploads/": os.path.join(app.root_path, "uploads"),
+    }
+    for prefix, directory in safe_roots.items():
+        if normalized.startswith(prefix):
+            return send_from_directory(directory, normalized[len(prefix):])
+    return send_from_directory(static_root, normalized)
 
 # Initialize extensions
 db.init_app(app)
@@ -37,9 +62,17 @@ with app.app_context():
         print(f"Note: Database creation skipped or failed: {e}")
 
 # Register Blueprints
+from apps.routes.auth import auth_bp
+from apps.routes.seeker import seeker_bp
+from apps.routes.company import company_bp
+from apps.routes.jobs import jobs_bp
 from apps.routes.notifications import notifications_bp
 from apps.routes.eligibility import eligibility_bp
 
+app.register_blueprint(auth_bp, url_prefix='')
+app.register_blueprint(seeker_bp, url_prefix='')
+app.register_blueprint(company_bp, url_prefix='')
+app.register_blueprint(jobs_bp, url_prefix='')
 app.register_blueprint(notifications_bp, url_prefix='')
 app.register_blueprint(eligibility_bp, url_prefix='')
 
@@ -127,6 +160,72 @@ def create_notification(user_id, user_type, message, type='system'):
 # ════════════════════════════════════════════════════════════════════════════
 #  AUTH ROUTES
 # ════════════════════════════════════════════════════════════════════════════
+def store_uploaded_resume(seeker_id, resume_path, extracted_text="", extracted_skills=None):
+    """Persist parsed resume content and mark older resumes inactive."""
+    if not seeker_id or not resume_path:
+        return None
+
+    try:
+        UploadedResume.query.filter_by(seeker_id=seeker_id, is_active=True).update({"is_active": False})
+        resume = UploadedResume(
+            seeker_id=seeker_id,
+            filename=os.path.basename(resume_path),
+            file_path=resume_path,
+            extracted_text=extracted_text or "",
+            extracted_skills=", ".join(extracted_skills or []),
+            is_active=True,
+        )
+        db.session.add(resume)
+        db.session.commit()
+        return resume
+    except Exception as e:
+        print(f"Error storing resume: {e}")
+        db.session.rollback()
+        return None
+
+
+def get_active_resume(seeker):
+    """Return the active stored resume, creating one from the current path if needed."""
+    active_resume = UploadedResume.query.filter_by(
+        seeker_id=seeker.id,
+        is_active=True
+    ).order_by(UploadedResume.created_at.desc()).first()
+
+    if active_resume:
+        return active_resume
+
+    if seeker.resume_path and os.path.exists(seeker.resume_path):
+        resume_text = parse_resume(seeker.resume_path)
+        skills = extract_skills(" ".join([resume_text, seeker.skills or "", seeker.education or ""]))
+        return store_uploaded_resume(seeker.id, seeker.resume_path, resume_text, skills)
+
+    return None
+
+
+def save_recommendation_history(seeker_id, resume_id, recommendations):
+    """Store the latest recommendation scores for history and analytics."""
+    if not seeker_id:
+        return
+
+    try:
+        for item in recommendations[:25]:
+            job = item["job"]
+            db.session.add(RecommendationHistory(
+                seeker_id=seeker_id,
+                job_id=job.id,
+                resume_id=resume_id,
+                similarity_score=item["similarity_score"],
+                match_percentage=item["match_percentage"],
+                matched_skills=", ".join(item["matched_skills"]),
+                missing_skills=", ".join(item["missing_skills"]),
+                recommended_skills=", ".join(item["recommended_skills"]),
+            ))
+        db.session.commit()
+    except Exception as e:
+        print(f"Error storing recommendations: {e}")
+        db.session.rollback()
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -247,6 +346,16 @@ def register_seeker():
         )
         db.session.add(new_seeker)
         db.session.commit()
+
+        if resume_path and os.path.exists(resume_path):
+            resume_text = parse_resume(resume_path)
+            resume_skills = extract_skills(" ".join([
+                resume_text,
+                request.form.get("skills", ""),
+                request.form.get("education", ""),
+                request.form.get("experience", ""),
+            ]))
+            store_uploaded_resume(new_seeker.id, resume_path, resume_text, resume_skills)
 
         session.pop("resume_data", None)
 
@@ -396,16 +505,36 @@ def seeker_dashboard():
         .all()
     )
 
-    resume_text = ""
-    if seeker.resume_path and os.path.exists(seeker.resume_path):
+    active_resume = get_active_resume(seeker)
+    resume_text = active_resume.extracted_text if active_resume else ""
+    if not resume_text and seeker.resume_path and os.path.exists(seeker.resume_path):
         resume_text = parse_resume(seeker.resume_path)
-    keywords = extract_keywords(resume_text) if resume_text else []
+
+    keywords = extract_keywords(" ".join([resume_text, seeker.skills or ""])) if resume_text or seeker.skills else []
+    recommendations = recommend_jobs_for_resume(seeker, resume_text, available_jobs_data)
+    if not recommendations:
+        recommendations = [{
+            "job": job,
+            "match_percentage": 0,
+            "similarity_score": 0.0,
+            "matched_skills": [],
+            "missing_skills": extract_skills(f"{job.title} {job.description} {job.required_skills or ''}")[:8],
+            "recommended_skills": extract_skills(f"{job.title} {job.description} {job.required_skills or ''}")[:6],
+            "skill_match_percentage": 0,
+            "is_best_match": False,
+        } for job in available_jobs_data]
+    if recommendations:
+        save_recommendation_history(seeker.id, active_resume.id if active_resume else None, recommendations)
+
+    saved_job_ids = {
+        saved.job_id for saved in SavedJob.query.filter_by(seeker_id=seeker.id).all()
+    }
 
     jobs = []
-    for job in available_jobs_data:
+    for item in recommendations:
+        job = item["job"]
         job_desc_full = f"{job.title} {job.description} {job.required_skills} {job.tags or ''}"
-        match_score   = match_resume_to_job(resume_text, job_desc_full) if resume_text else 0
-        ats_data      = calculate_ats_score(resume_text, job_desc_full) if resume_text else {}
+        ats_data = calculate_ats_score(resume_text, job_desc_full) if resume_text else {}
 
         jobs.append({
             "id":               job.id,
@@ -421,12 +550,26 @@ def seeker_dashboard():
             "is_boosted":       job.is_boosted,
             "description":      job.description,
             "required_skills":  job.required_skills,
-            "match_score":      match_score,
+            "match_score":      item["match_percentage"],
+            "similarity_score": item["similarity_score"],
+            "matched_skills":   item["matched_skills"],
+            "missing_skills":   item["missing_skills"],
+            "recommended_skills": item["recommended_skills"],
+            "skill_match_percentage": item["skill_match_percentage"],
+            "is_best_match":    item["is_best_match"],
+            "is_saved":         job.id in saved_job_ids,
             "ats_score":        ats_data.get("score", 0) if ats_data else 0,
             "ats_findings":     ats_data.get("findings", []) if ats_data else [],
         })
 
-    jobs.sort(key=lambda x: (x["is_boosted"], x["match_score"]), reverse=True)
+    for job in jobs[:5]:
+        viewed = RecentlyViewedJob.query.filter_by(seeker_id=seeker.id, job_id=job["id"]).first()
+        if viewed:
+            viewed.viewed_at = datetime.utcnow()
+        else:
+            db.session.add(RecentlyViewedJob(seeker_id=seeker.id, job_id=job["id"]))
+    if jobs:
+        db.session.commit()
 
     # Fetch applied jobs
     swipes = (
@@ -445,13 +588,111 @@ def seeker_dashboard():
         for s in swipes
     ]
 
+    saved_jobs = (
+        SavedJob.query
+        .filter_by(seeker_id=seeker.id)
+        .order_by(SavedJob.created_at.desc())
+        .limit(10)
+        .all()
+    )
+    recently_viewed = (
+        RecentlyViewedJob.query
+        .filter_by(seeker_id=seeker.id)
+        .order_by(RecentlyViewedJob.viewed_at.desc())
+        .limit(10)
+        .all()
+    )
+    recommendation_history_rows = (
+        RecommendationHistory.query
+        .filter_by(seeker_id=seeker.id)
+        .order_by(RecommendationHistory.created_at.desc())
+        .limit(10)
+        .all()
+    )
+
     return render_template(
         "seeker_dashboard.html",
         seeker=seeker,
         jobs=jobs,
         applications=applications,
         keywords=keywords,
+        saved_jobs=saved_jobs,
+        recently_viewed=recently_viewed,
+        recommendation_history=recommendation_history_rows,
     )
+
+
+@app.route("/api/recommendations")
+def api_recommendations():
+    if "seeker_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    seeker = db.session.get(Seeker, session["seeker_id"])
+    if not seeker:
+        return jsonify({"error": "Not found"}), 404
+
+    active_resume = get_active_resume(seeker)
+    resume_text = active_resume.extracted_text if active_resume else ""
+    jobs = JobListing.query.order_by(JobListing.created_at.desc()).limit(100).all()
+    recommendations = recommend_jobs_for_resume(seeker, resume_text, jobs, limit=25)
+    save_recommendation_history(seeker.id, active_resume.id if active_resume else None, recommendations)
+
+    return jsonify([{
+        "job_id": item["job"].id,
+        "title": item["job"].title,
+        "company_name": item["job"].company.company_name,
+        "location": item["job"].location,
+        "match_percentage": item["match_percentage"],
+        "required_skills": item["job"].required_skills,
+        "matched_skills": item["matched_skills"],
+        "missing_skills": item["missing_skills"],
+        "recommended_skills": item["recommended_skills"],
+        "is_best_match": item["is_best_match"],
+    } for item in recommendations])
+
+
+@app.route("/api/jobs/<int:job_id>/save", methods=["POST"])
+def save_job(job_id):
+    if "seeker_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    if not db.session.get(JobListing, job_id):
+        return jsonify({"error": "Job not found"}), 404
+
+    existing = SavedJob.query.filter_by(seeker_id=session["seeker_id"], job_id=job_id).first()
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+        return jsonify({"status": "removed", "saved": False})
+
+    db.session.add(SavedJob(seeker_id=session["seeker_id"], job_id=job_id))
+    db.session.commit()
+    return jsonify({"status": "saved", "saved": True})
+
+
+@app.route("/api/recommendation-history")
+def recommendation_history():
+    if "seeker_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    rows = (
+        RecommendationHistory.query
+        .filter_by(seeker_id=session["seeker_id"])
+        .order_by(RecommendationHistory.created_at.desc())
+        .limit(25)
+        .all()
+    )
+    return jsonify([{
+        "job_id": row.job_id,
+        "title": row.job_listing.title,
+        "company_name": row.job_listing.company.company_name,
+        "match_percentage": row.match_percentage,
+        "similarity_score": row.similarity_score,
+        "matched_skills": row.matched_skills,
+        "missing_skills": row.missing_skills,
+        "recommended_skills": row.recommended_skills,
+        "created_at": row.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+    } for row in rows])
 
 
 @app.route("/swipe", methods=["POST"])
@@ -523,10 +764,12 @@ def edit_seeker_profile():
     if request.method == "POST":
         resume_file = request.files.get("resume")
         resume_path = request.form.get("existing_resume", "")
+        resume_updated = False
         if resume_file and resume_file.filename and allowed_file(resume_file.filename, ALLOWED_RESUME):
             fname = secure_filename(f"{uuid.uuid4()}_{resume_file.filename}")
             resume_path = os.path.join(app.config["RESUME_FOLDER"], fname)
             resume_file.save(resume_path)
+            resume_updated = True
 
         seeker.first_name = request.form["first_name"]
         seeker.last_name  = request.form["last_name"]
@@ -537,6 +780,17 @@ def edit_seeker_profile():
         seeker.resume_path = resume_path
 
         db.session.commit()
+
+        if resume_updated and resume_path and os.path.exists(resume_path):
+            resume_text = parse_resume(resume_path)
+            resume_skills = extract_skills(" ".join([
+                resume_text,
+                seeker.skills or "",
+                seeker.education or "",
+                seeker.experience or "",
+            ]))
+            store_uploaded_resume(seeker.id, resume_path, resume_text, resume_skills)
+
         flash("Profile updated!", "success")
         return redirect(url_for("seeker_dashboard"))
 

@@ -62,6 +62,18 @@ class Seeker(db.Model):
         lazy=True,
         cascade='all, delete-orphan'
     )
+    resumes = db.relationship(
+        'UploadedResume',
+        backref='seeker',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
+    recommendation_history = db.relationship(
+        'RecommendationHistory',
+        backref='seeker',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
 
     def to_dict(self):
         """Serialize seeker to a safe JSON-friendly dict (no password hash)."""
@@ -184,6 +196,12 @@ class JobListing(db.Model):
         lazy=True,
         cascade='all, delete-orphan'
     )
+    recommendation_history = db.relationship(
+        'RecommendationHistory',
+        backref='job_listing',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
 
     def to_dict(self):
         return {
@@ -257,6 +275,106 @@ class JobSwipe(db.Model):
 # ─────────────────────────────────────────────────────────────────────────────
 #  NOTIFICATIONS
 # ─────────────────────────────────────────────────────────────────────────────
+class UploadedResume(db.Model):
+    __tablename__ = 'uploaded_resumes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    seeker_id = db.Column(
+        db.Integer,
+        db.ForeignKey('seekers.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
+    filename = db.Column(db.String(255), nullable=False)
+    file_path = db.Column(db.String(500), nullable=False)
+    extracted_text = db.Column(db.Text)
+    extracted_skills = db.Column(db.Text)
+    is_active = db.Column(db.Boolean, default=True, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def skills_list(self):
+        return [skill.strip() for skill in (self.extracted_skills or "").split(",") if skill.strip()]
+
+
+class RecommendationHistory(db.Model):
+    __tablename__ = 'recommendation_history'
+
+    id = db.Column(db.Integer, primary_key=True)
+    seeker_id = db.Column(
+        db.Integer,
+        db.ForeignKey('seekers.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
+    job_id = db.Column(
+        db.Integer,
+        db.ForeignKey('jobs.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
+    resume_id = db.Column(
+        db.Integer,
+        db.ForeignKey('uploaded_resumes.id', ondelete='SET NULL'),
+        nullable=True,
+        index=True
+    )
+    similarity_score = db.Column(db.Float, default=0.0)
+    match_percentage = db.Column(db.Integer, default=0)
+    matched_skills = db.Column(db.Text)
+    missing_skills = db.Column(db.Text)
+    recommended_skills = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    resume = db.relationship('UploadedResume', lazy=True)
+
+
+class SavedJob(db.Model):
+    __tablename__ = 'saved_jobs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    seeker_id = db.Column(
+        db.Integer,
+        db.ForeignKey('seekers.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
+    job_id = db.Column(
+        db.Integer,
+        db.ForeignKey('jobs.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    seeker = db.relationship('Seeker', lazy=True)
+    job_listing = db.relationship('JobListing', lazy=True)
+    __table_args__ = (db.UniqueConstraint('seeker_id', 'job_id', name='uq_saved_job'),)
+
+
+class RecentlyViewedJob(db.Model):
+    __tablename__ = 'recently_viewed_jobs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    seeker_id = db.Column(
+        db.Integer,
+        db.ForeignKey('seekers.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
+    job_id = db.Column(
+        db.Integer,
+        db.ForeignKey('jobs.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
+    viewed_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    seeker = db.relationship('Seeker', lazy=True)
+    job_listing = db.relationship('JobListing', lazy=True)
+    __table_args__ = (db.UniqueConstraint('seeker_id', 'job_id', name='uq_recently_viewed_job'),)
+
+
 class Notification(db.Model):
     __tablename__ = 'notifications'
 

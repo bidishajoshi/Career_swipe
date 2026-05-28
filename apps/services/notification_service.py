@@ -5,6 +5,7 @@ Handles all notification creation, retrieval, and management operations.
 
 from datetime import datetime
 from typing import List, Dict, Optional
+from flask import current_app
 from ..extensions import db
 from ..models import Notification, NotificationPreference
 
@@ -68,12 +69,20 @@ class NotificationService:
     def get_unread_count(user_id: int, user_type: str) -> int:
         """Get count of unread notifications for a user"""
         try:
+            # Ensure we have an app context
+            if not current_app:
+                return 0
+            
             return Notification.query.filter_by(
                 recipient_id=user_id,
                 recipient_type=user_type,
                 is_read=False,
                 is_deleted=False,
             ).count()
+        except RuntimeError as e:
+            # No app context available
+            print(f'[NotificationService] Error getting unread count: {e}')
+            return 0
         except Exception as e:
             print(f'[NotificationService] Error getting unread count: {e}')
             return 0

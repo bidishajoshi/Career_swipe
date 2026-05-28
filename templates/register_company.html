@@ -61,7 +61,7 @@
           <span><strong>Upload company logo</strong> or click to browse<br><small>PNG or JPG · Max 2MB</small></span>
           <span class="file-name-display" id="logo-name">No file chosen</span>
         </label>
-        <input type="file" name="logo" id="logo-input" accept=".png,.jpg,.jpeg" style="display:none">
+        <input type="file" name="logo" id="logo-input" accept=".png,.jpg,.jpeg" style="display:none" required>
       </div>
 
       <div class="form-section-label">Eligibility &amp; Legal Confirmation</div>
@@ -88,6 +88,66 @@
 <script>
 document.getElementById('logo-input').addEventListener('change', function(){
   document.getElementById('logo-name').textContent = this.files[0]?.name || 'No file chosen';
+});
+
+// Form validation with alerts
+document.querySelector('.auth-form').addEventListener('submit', function(e) {
+  const companyName = document.querySelector('input[name="company_name"]').value.trim();
+  const email = document.querySelector('input[name="email"]').value.trim();
+  const password = document.querySelector('input[name="password"]').value.trim();
+  const country = document.querySelector('input[name="country"]').value.trim();
+  const logoFile = document.querySelector('input[name="logo"]').files.length;
+  const ageVerified = document.querySelector('input[name="age_verified"]').checked;
+  const legallyEligible = document.querySelector('input[name="legally_eligible"]').checked;
+  
+  // Check all required fields
+  if (!companyName) {
+    alert('❌ Company name is required!');
+    e.preventDefault();
+    return false;
+  }
+  
+  if (!email) {
+    alert('❌ Official email is required!');
+    e.preventDefault();
+    return false;
+  }
+  
+  if (!password) {
+    alert('❌ Password is required! (Min 8 characters)');
+    e.preventDefault();
+    return false;
+  }
+  
+  if (password.length < 8) {
+    alert('❌ Password must be at least 8 characters long!');
+    e.preventDefault();
+    return false;
+  }
+  
+  if (!country) {
+    alert('❌ Country of operation is required!');
+    e.preventDefault();
+    return false;
+  }
+  
+  if (logoFile === 0) {
+    alert('❌ Company logo is required! Please upload a logo file.');
+    e.preventDefault();
+    return false;
+  }
+  
+  if (!ageVerified) {
+    alert('❌ You must confirm that the company representative is at least 18 years old!');
+    e.preventDefault();
+    return false;
+  }
+  
+  if (!legallyEligible) {
+    alert('❌ You must certify that the company is legally registered and eligible to operate!');
+    e.preventDefault();
+    return false;
+  }
 });
 </script>
 {% endblock %}

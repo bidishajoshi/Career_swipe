@@ -17,7 +17,7 @@ from ..models import Seeker, JobListing, JobSwipe
 from ..services.email_service import send_application_emails
 from ..services.notification_service import create_notification
 from utils.helpers import allowed_file
-from utils.tfidf import parse_resume, match_resume_to_job, extract_keywords
+from utils.tfidf import parse_resume, match_resume_to_job, extract_keywords, filter_jobs_by_preferences
 from utils.ats import calculate_ats_score
 
 seeker_bp = Blueprint('seeker', __name__)
@@ -70,9 +70,19 @@ def seeker_dashboard():
     raw_jobs = (
         query
         .order_by(JobListing.is_boosted.desc(), JobListing.created_at.desc())
-        .limit(50)
+        .limit(100)  # Fetch more jobs to filter
         .all()
     )
+
+    # ── Smart filtering using TF-IDF + Cosine Similarity ───────────────────────
+    # Only filter if seeker has location preferences set
+    filtered_jobs_data = []
+    if seeker.address and seeker.country:
+        filtered_jobs_data = filter_jobs_by_preferences(seeker, raw_jobs, min_location_score=0.4, min_skill_score=0.0)
+    
+    # If filtering returned no results or seeker has no location, use all jobs
+    if not filtered_jobs_data:
+        filtered_jobs_data = [{'job': job, 'location_score': 0, 'skill_score': 0, 'relevance_score': 0} for job in raw_jobs]
 
     # ── AI scoring ────────────────────────────────────────────────────────────
     resume_text = ''
@@ -81,7 +91,8 @@ def seeker_dashboard():
     keywords = extract_keywords(resume_text) if resume_text else []
 
     jobs = []
-    for job in raw_jobs:
+    for item in filtered_jobs_data:
+        job = item['job']
         full_text  = f'{job.title} {job.description} {job.required_skills} {job.tags or ""}'
         match      = match_resume_to_job(resume_text, full_text) if resume_text else 0
         ats_data   = calculate_ats_score(resume_text, full_text) if resume_text else {}
@@ -103,10 +114,13 @@ def seeker_dashboard():
             'match_score':      match,
             'ats_score':        ats_data.get('score', 0) if ats_data else 0,
             'ats_findings':     ats_data.get('findings', []) if ats_data else [],
+            'location_match':   round(item['location_score'] * 100),  # Location match %
+            'skill_match':      round(item['skill_score'] * 100),     # Skill match %
+            'relevance_score':  round(item['relevance_score'] * 100), # Overall relevance %
         })
 
-    # Sort: boosted first, then by match score
-    jobs.sort(key=lambda x: (x['is_boosted'], x['match_score']), reverse=True)
+    # Sort: boosted first, then by relevance score, then by match score
+    jobs.sort(key=lambda x: (x['is_boosted'], x['relevance_score'], x['match_score']), reverse=True)
 
     # ── Applied jobs (right-swipes) ───────────────────────────────────────────
     swipes = (

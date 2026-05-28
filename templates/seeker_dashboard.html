@@ -112,7 +112,7 @@
               <!-- Visual area -->
               <div class="jc-visual">
                 {% if job.logo_path %}
-                  <img src="{{ url_for('static', filename=job.logo_path.replace('\\', '/').replace('static/', '')) }}"
+                  <img src="{{ url_for('static', filename='uploads/' + job.logo_path) }}"
                        class="jc-full-bg" alt="{{ job.company_name }} logo" loading="lazy">
                 {% else %}
                   <div class="jc-full-bg-placeholder"
@@ -133,6 +133,30 @@
                     <span class="score-val">{{ job.match_score|int }}%</span>
                   </div>
                   {% endif %}
+                  
+                  <!-- Location & Skill Match Indicators -->
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+                    {% if job.location_match > 0 %}
+                    <div class="score-indicator" title="Location match: {{ job.location_match }}%"
+                         style="font-size: 11px; background: rgba(76, 175, 80, 0.8); padding: 4px 8px; border-radius: 12px; color: white; font-weight: bold;">
+                      📍 {{ job.location_match }}%
+                    </div>
+                    {% endif %}
+                    
+                    {% if job.skill_match > 0 %}
+                    <div class="score-indicator" title="Skill match: {{ job.skill_match }}%"
+                         style="font-size: 11px; background: rgba(33, 150, 243, 0.8); padding: 4px 8px; border-radius: 12px; color: white; font-weight: bold;">
+                      ⚙️ {{ job.skill_match }}%
+                    </div>
+                    {% endif %}
+                    
+                    {% if job.relevance_score > 0 %}
+                    <div class="score-indicator" title="Overall relevance: {{ job.relevance_score }}%"
+                         style="font-size: 11px; background: rgba(156, 39, 176, 0.8); padding: 4px 8px; border-radius: 12px; color: white; font-weight: bold;">
+                      ✨ {{ job.relevance_score }}%
+                    </div>
+                    {% endif %}
+                  </div>
                 </div>
 
                 {% if job.is_boosted %}

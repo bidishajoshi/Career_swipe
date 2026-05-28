@@ -1,1 +1,0 @@
-# CareerSwipe utilities package

@@ -24,6 +24,13 @@ ALLOWED_RESUME = {'pdf', 'doc', 'docx'}
 ALLOWED_LOGO   = {'png', 'jpg', 'jpeg', 'webp'}
 
 
+def normalize_file_path(file_path):
+    """Convert file path to web-safe relative path with forward slashes."""
+    if not file_path:
+        return ''
+    return file_path.replace('\\', '/').replace('static/', '')
+
+
 # ── Home ──────────────────────────────────────────────────────────────────────
 @auth_bp.route('/')
 def index():
@@ -183,29 +190,40 @@ def register_company():
             flash('Passwords do not match.', 'error')
             return redirect(url_for('auth.register_company'))
 
-        # Handle logo upload
+        # Handle logo upload (REQUIRED)
         logo_path = ''
         logo_file = request.files.get('logo')
-        if logo_file and logo_file.filename and allowed_file(logo_file.filename, ALLOWED_LOGO):
-            fname     = secure_filename(f'{uuid.uuid4()}_{logo_file.filename}')
-            logo_path = os.path.join(current_app.config['LOGO_FOLDER'], fname)
-            logo_file.save(logo_path)
+        if not logo_file or not logo_file.filename:
+            flash('Company logo is required.', 'error')
+            return redirect(url_for('auth.register_company'))
+        
+        if not allowed_file(logo_file.filename, ALLOWED_LOGO):
+            flash('Invalid logo format. Please upload a PNG or JPG file.', 'error')
+            return redirect(url_for('auth.register_company'))
+            
+        fname     = secure_filename(f'{uuid.uuid4()}_{logo_file.filename}')
+        logo_full_path = os.path.join(current_app.config['LOGO_FOLDER'], fname)
+        logo_file.save(logo_full_path)
+        # Store relative path for web serving (uploads/logos/filename)
+        logo_path = normalize_file_path(logo_full_path)
 
         # Handle banner upload
         banner_path = ''
         banner_file = request.files.get('banner')
         if banner_file and banner_file.filename and allowed_file(banner_file.filename, ALLOWED_LOGO):
             fname       = secure_filename(f'{uuid.uuid4()}_{banner_file.filename}')
-            banner_path = os.path.join(current_app.config['LOGO_FOLDER'], fname)
-            banner_file.save(banner_path)
+            banner_full_path = os.path.join(current_app.config['LOGO_FOLDER'], fname)
+            banner_file.save(banner_full_path)
+            banner_path = normalize_file_path(banner_full_path)
 
         # Handle verification document upload
         verification_doc = ''
         verification_file = request.files.get('verification_document')
         if verification_file and verification_file.filename:
             fname            = secure_filename(f'{uuid.uuid4()}_{verification_file.filename}')
-            verification_doc = os.path.join(current_app.config['UPLOAD_FOLDER'], fname)
-            verification_file.save(verification_doc)
+            verification_full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], fname)
+            verification_file.save(verification_full_path)
+            verification_doc = normalize_file_path(verification_full_path)
 
         # Create company with all fields
         company = Company(
