@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}CareerSwipe – Swipe. Match. Hire.{% endblock %}
+{% block content %}
+
+<!-- ── Hero ──────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-inner">
+
+    <h1>Find your dream job<br><span>with a single swipe</span></h1>
+
+    <p>
+      CareerSwipe analyzes your resume and matches it to the best opportunities.
+      Swipe right to apply instantly, left to skip — it's that simple.
+    </p>
+
+    <div class="hero-btns">
+      <a href="{{ url_for('upload_resume_step') }}" class="btn btn-primary" id="cta-seeker">
+        🚀 I'm a Job Seeker
+      </a>
+      <a href="{{ url_for('register_company') }}" class="btn btn-company" id="cta-company">
+        🏢 I'm Hiring
+      </a>
+    </div>
+
+    <div style="margin-top:2rem; display:flex; gap:2rem; flex-wrap:wrap;">
+      <div style="text-align:center;">
+        <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--primary);">10K+</div>
+        <div style="font-size:12px;color:var(--text-muted);">Active Jobs</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--accent);">5K+</div>
+        <div style="font-size:12px;color:var(--text-muted);">Companies</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--purple-light,#a78bfa);">95%</div>
+        <div style="font-size:12px;color:var(--text-muted);">Match Rate</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-card-stack" aria-hidden="true">
+    <div class="demo-card dc3">
+      <span>💼</span>
+      <b>UX Designer</b>
+      <small>TechCo · Remote</small>
+    </div>
+    <div class="demo-card dc2">
+      <span>🧑‍💻</span>
+      <b>Backend Dev</b>
+      <small>Leapfrog · Kathmandu</small>
+    </div>
+    <div class="demo-card dc1">
+      <span>📊</span>
+      <b>Data Analyst</b>
+      <small>CloudBase · Full-time</small>
+    </div>
+  </div>
+</section>
+
+<!-- ── How It Works ───────────────────────────────────────────────────── -->
+<section class="how-it-works">
+  <h2 class="section-title">How <span>CareerSwipe</span> Works</h2>
+  <p class="section-sub">Three steps to your next opportunity</p>
+
+  <div class="features">
+    <div class="feature-card" id="feat-upload">
+      <span class="feat-icon">📄</span>
+      <h3>Upload Your Resume</h3>
+      <p>Our AI engine parses your resume and extracts skills, experience, and keywords to build your unique profile.</p>
+    </div>
+    <div class="feature-card" id="feat-match">
+      <span class="feat-icon">🤖</span>
+      <h3>AI Matching Score</h3>
+      <p>Every job gets a match score based on your resume. See ATS compatibility before you apply — no guessing.</p>
+    </div>
+    <div class="feature-card" id="feat-swipe">
+      <span class="feat-icon">👆</span>
+      <h3>Swipe to Apply</h3>
+      <p>Swipe right to instantly send your resume to the company. Swipe left to skip. That's it — no lengthy forms.</p>
+    </div>
+    <div class="feature-card" id="feat-track">
+      <span class="feat-icon">📈</span>
+      <h3>Track Applications</h3>
+      <p>Monitor all your applications in one dashboard. Get notified when you're shortlisted or called for an interview.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA Banner ─────────────────────────────────────────────────────── -->
+<section style="
+  padding: 4rem 2rem;
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto 4rem;
+">
+  <div style="
+    background: linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(16,185,129,0.08) 100%);
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 24px;
+    padding: 3rem 2rem;
+    backdrop-filter: blur(16px);
+  ">
+    <h2 style="font-family:'Syne',sans-serif;font-size:clamp(1.5rem,3vw,2rem);font-weight:800;margin-bottom:1rem;letter-spacing:-0.02em;">
+      Ready to find your next role?
+    </h2>
+    <p style="color:var(--text-muted);font-size:15px;margin-bottom:2rem;line-height:1.7;">
+      Join thousands of job seekers who've found their dream jobs through CareerSwipe.
+    </p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <a href="{{ url_for('upload_resume_step') }}" class="btn btn-primary" id="cta-bottom-seeker">Get Started Free →</a>
+      <a href="{{ url_for('login_seeker') }}" class="btn btn-outline">Already have an account?</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

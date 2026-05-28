@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+{% block title %}Company Dashboard – CareerSwipe{% endblock %}
+{% block content %}
+<div class="dash-container">
+  <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+  <aside class="sidebar company-sidebar" id="dashboardSidebar" aria-label="Company sidebar">
+    <div class="sidebar-brand">
+      <a href="{{ url_for('index') }}" class="nav-logo">Career<span>Swipe</span></a>
+    </div>
+
+    <div class="sidebar-avatar-large">
+      <div class="logo-container">
+        {% if company.logo_path %}
+          <img src="{{ url_for('static', filename=company.logo_path.replace('\\', '/').replace('static/', '')) }}"
+               class="company-logo-lg" alt="{{ company.company_name }} logo">
+        {% else %}
+          <div class="avatar-circle-lg company-avatar" aria-hidden="true">
+            {{ company.company_name[0] | upper }}
+          </div>
+        {% endif %}
+      </div>
+      <div class="company-info-sidebar">
+        <h3>{{ company.company_name }}</h3>
+        <span class="industry-tag">{{ company.industry or 'Company' }}</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Company navigation">
+      <a href="#overview" class="sn-link sn-active">
+        <span class="nav-icon">📊</span> Overview
+      </a>
+      <a href="#jobs-section" class="sn-link">
+        <span class="nav-icon">💼</span> My Jobs
+      </a>
+      <a href="#applicants-section" class="sn-link">
+        <span class="nav-icon">👥</span> Applicants
+      </a>
+      <a href="{{ url_for('post_job') }}" class="sn-link post-job-link">
+        <span class="nav-icon">➕</span> Post a Job
+      </a>
+      <div class="sidebar-divider"></div>
+      <a href="{{ url_for('logout') }}" class="sn-link logout-link">
+        <span class="nav-icon">🚪</span> Logout
+      </a>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <p>© 2026 CareerSwipe</p>
+    </div>
+  </aside>
+
+  <!-- ── Main Content ────────────────────────────────────────────────── -->
+  <main class="dash-main-v2">
+    <!-- Mobile Header -->
+    <header class="mobile-dash-header">
+      <button id="sidebarToggle" class="sidebar-toggle-btn" aria-label="Open sidebar">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="mobile-logo">Career<span>Swipe</span></div>
+      <div class="mobile-avatar">
+        {% if company.logo_path %}
+          <img src="{{ url_for('static', filename=company.logo_path.replace('\\', '/').replace('static/', '')) }}" alt="Logo">
+        {% else %}
+          <div class="avatar-mini">{{ company.company_name[0] }}</div>
+        {% endif %}
+      </div>
+    </header>
+
+    <div class="dash-content-inner" id="overview">
+      <header class="dash-header-v2">
+        <div class="header-welcome">
+          <h1>Welcome back, <span>{{ company.company_name }}</span></h1>
+          <p>Here's what's happening with your recruitment today.</p>
+        </div>
+        <div class="header-actions">
+          <a href="{{ url_for('post_job') }}" class="btn btn-company">
+            <span class="plus-icon">+</span> Post New Job
+          </a>
+        </div>
+      </header>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid-v2">
+        <div class="stat-card-v2 glass">
+          <div class="stat-icon-wrap blue">💼</div>
+          <div class="stat-data">
+            <span class="stat-value">{{ jobs|length }}</span>
+            <span class="stat-title">Active Jobs</span>
+          </div>
+        </div>
+        <div class="stat-card-v2 glass">
+          <div class="stat-icon-wrap green">👥</div>
+          <div class="stat-data">
+            <span class="stat-value">{{ applicants|length }}</span>
+            <span class="stat-title">Total Applications</span>
+          </div>
+        </div>
+        <div class="stat-card-v2 glass">
+          <div class="stat-icon-wrap purple">⭐</div>
+          <div class="stat-data">
+            <span class="stat-value">{{ applicants|selectattr('status', 'equalto', 'shortlisted')|list|length }}</span>
+            <span class="stat-title">Shortlisted</span>
+          </div>
+        </div>
+        <div class="stat-card-v2 glass">
+          <div class="stat-icon-wrap orange">📅</div>
+          <div class="stat-data">
+            <span class="stat-value">{{ applicants|selectattr('status', 'equalto', 'interview')|list|length }}</span>
+            <span class="stat-title">Interviewing</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Jobs Section ──────────────────────────────────────────────── -->
+      <section id="jobs-section" class="dash-section">
+        <div class="section-header-v2">
+          <div class="sh-left">
+            <h2>Your Job Listings</h2>
+            <p>Manage and track your active job postings</p>
+          </div>
+          <div class="sh-right">
+            <span class="count-badge">{{ jobs|length }} Active</span>
+          </div>
+        </div>
+
+        {% if jobs %}
+        <div class="jobs-grid-v2">
+          {% for job in jobs %}
+          <div class="job-card-v2 glass">
+            <div class="jc-header-v2">
+              <div class="jc-title-area">
+                <h3>{{ job.title }}</h3>
+                <span class="jc-tag">{{ job.job_type }}</span>
+              </div>
+              <div class="jc-menu-btn">⋮</div>
+            </div>
+            <div class="jc-meta-v2">
+              <div class="meta-item"><span>📍</span> {{ job.location or 'Remote' }}</div>
+              <div class="meta-item"><span>💰</span> {{ job.salary or 'Competitive' }}</div>
+              <div class="meta-item"><span>🏠</span> {{ job.job_location_type }}</div>
+            </div>
+            <div class="jc-footer-v2">
+              <div class="jc-date">Posted {{ job.created_at.strftime('%b %d') if job.created_at else '' }}</div>
+              <div class="jc-stats">
+                <span title="Applications">👤 {{ applicants|selectattr('job_id', 'equalto', job.id)|list|length }}</span>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state-v2 glass">
+          <div class="empty-icon">📁</div>
+          <h3>No jobs posted yet</h3>
+          <p>Start your recruitment journey by posting your first job listing.</p>
+          <a href="{{ url_for('post_job') }}" class="btn btn-company">Post Your First Job</a>
+        </div>
+        {% endif %}
+      </section>
+
+      <!-- ── Applicants Section ─────────────────────────────────────────── -->
+      <section id="applicants-section" class="dash-section">
+        <div class="section-header-v2">
+          <div class="sh-left">
+            <h2>Recent Applicants</h2>
+            <p>Review and manage candidate applications</p>
+          </div>
+          <div class="sh-right">
+            <span class="count-badge">{{ applicants|length }} total</span>
+          </div>
+        </div>
+
+        {% if applicants %}
+        <div class="applicants-list-v2">
+          {% for a in applicants %}
+          <div class="applicant-card-v2 glass">
+            <div class="ac-top">
+              <div class="ac-user-info">
+                <div class="ac-avatar">
+                  {{ a.first_name[0] }}{{ a.last_name[0] }}
+                </div>
+                <div class="ac-name-wrap">
+                  <h4>{{ a.first_name }} {{ a.last_name }}</h4>
+                  <p>{{ a.email }}</p>
+                </div>
+              </div>
+              <div class="ac-status">
+                <span class="status-badge status-{{ a.status }}">
+                  {{ a.status | capitalize }}
+                </span>
+              </div>
+            </div>
+
+            <div class="ac-details">
+              <div class="ac-detail-item">
+                <small>Applied for</small>
+                <strong>{{ a.job_title }}</strong>
+              </div>
+              <div class="ac-detail-item">
+                <small>Match Score</small>
+                <div class="score-pill {% if a.match_score >= 80 %}high{% elif a.match_score >= 50 %}mid{% else %}low{% endif %}">
+                  {{ a.match_score|int }}%
+                </div>
+              </div>
+              <div class="ac-detail-item">
+                <small>ATS Score</small>
+                <strong>{{ a.ats_score|int }}</strong>
+              </div>
+            </div>
+
+            {% if a.skills %}
+            <div class="ac-skills">
+              {% for sk in a.skills.split(',')[:3] %}
+                <span class="ac-skill-pill">{{ sk.strip() }}</span>
+              {% endfor %}
+              {% if a.skills.split(',')|length > 3 %}
+                <span class="ac-skill-more">+{{ a.skills.split(',')|length - 3 }}</span>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="ac-actions-v2">
+              <div class="ac-main-actions">
+                {% if a.status == 'pending' %}
+                  <a href="{{ url_for('update_applicant', swipe_id=a.swipe_id, action='shortlist') }}"
+                     class="btn-action shortlist">⭐ Shortlist</a>
+                  <a href="{{ url_for('update_applicant', swipe_id=a.swipe_id, action='reject') }}"
+                     class="btn-action reject">✕ Reject</a>
+                {% elif a.status == 'shortlisted' %}
+                  <a href="{{ url_for('update_applicant', swipe_id=a.swipe_id, action='interview') }}"
+                     class="btn-action interview">📅 Interview</a>
+                  <a href="{{ url_for('update_applicant', swipe_id=a.swipe_id, action='accept') }}"
+                     class="btn-action accept">✓ Hire</a>
+                {% elif a.status == 'interview' %}
+                  <a href="{{ url_for('update_applicant', swipe_id=a.swipe_id, action='accept') }}"
+                     class="btn-action accept">✓ Hire</a>
+                {% endif %}
+              </div>
+              {% if a.resume_path %}
+                <a href="{{ url_for('static', filename=a.resume_path.replace('\\', '/').replace('static/', '')) }}"
+                   target="_blank" class="btn-resume">View Resume</a>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state-v2 glass">
+          <div class="empty-icon">👥</div>
+          <p>No applicants yet. Your job listings will appear here once candidates start applying.</p>
+        </div>
+        {% endif %}
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+  // Mobile Sidebar Toggle
+  document.getElementById('sidebarToggle')?.addEventListener('click', function() {
+    document.getElementById('dashboardSidebar').classList.toggle('active');
+    this.classList.toggle('is-active');
+  });
+
+  // Active Link Handling
+  const navLinks = document.querySelectorAll('.sn-link');
+  navLinks.forEach(link => {
+    link.addEventListener('click', function() {
+      navLinks.forEach(l => l.classList.remove('sn-active'));
+      this.classList.add('sn-active');
+      if (window.innerWidth <= 768) {
+        document.getElementById('dashboardSidebar').classList.remove('active');
+        document.getElementById('sidebarToggle').classList.remove('is-active');
+      }
+    });
+  });
+</script>
+{% endblock %}
