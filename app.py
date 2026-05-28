@@ -11,10 +11,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import HTTPException
 
-from apps.config import Config
-from apps.extensions import db, migrate, mail
-from apps.models import (
-    Seeker, Company, JobListing, JobSwipe, Notification
+from config import Config
+from extensions import db, migrate, mail
+from models import (
+    Seeker, Company, JobListing, JobSwipe, Notification,
+    UploadedResume, RecommendationHistory, SavedJob, RecentlyViewedJob
 )
 from apps.services import NotificationService, EligibilityService
 from utils.tfidf import (
@@ -62,17 +63,9 @@ with app.app_context():
         print(f"Note: Database creation skipped or failed: {e}")
 
 # Register Blueprints
-from apps.routes.auth import auth_bp
-from apps.routes.seeker import seeker_bp
-from apps.routes.company import company_bp
-from apps.routes.jobs import jobs_bp
 from apps.routes.notifications import notifications_bp
 from apps.routes.eligibility import eligibility_bp
 
-app.register_blueprint(auth_bp, url_prefix='')
-app.register_blueprint(seeker_bp, url_prefix='')
-app.register_blueprint(company_bp, url_prefix='')
-app.register_blueprint(jobs_bp, url_prefix='')
 app.register_blueprint(notifications_bp, url_prefix='')
 app.register_blueprint(eligibility_bp, url_prefix='')
 
@@ -224,6 +217,55 @@ def save_recommendation_history(seeker_id, resume_id, recommendations):
     except Exception as e:
         print(f"Error storing recommendations: {e}")
         db.session.rollback()
+
+
+def is_relevant_recommendation(seeker, item):
+    """Keep only jobs with a meaningful resume/profile signal."""
+    job = item["job"]
+    seeker_terms = " ".join([
+        seeker.skills or "",
+        seeker.education or "",
+        seeker.experience or "",
+        seeker.career_field or "",
+        seeker.desired_roles or "",
+    ]).lower()
+    job_title = (job.title or "").lower()
+    desired_roles = [
+        role.strip().lower()
+        for role in (seeker.desired_roles or "").replace("|", ",").split(",")
+        if role.strip()
+    ]
+    seeker_skill_tokens = {
+        skill.strip().lower()
+        for skill in (seeker.skills or "").replace("|", ",").split(",")
+        if skill.strip()
+    }
+    profile_tokens = {
+        term for term in seeker_terms.replace(",", " ").split()
+        if len(term) > 2
+    }
+    career_title_terms = {
+        "it / software": {"it", "software", "developer", "engineer", "programmer", "data", "analyst", "python", "java"},
+        "business / management": {"business", "manager", "management", "operations", "analyst", "coordinator"},
+        "finance / accounting": {"finance", "accountant", "accounting", "audit", "bank", "tax"},
+        "healthcare / medical": {"healthcare", "medical", "nurse", "doctor", "care", "clinic"},
+        "engineering": {"engineer", "engineering", "mechanical", "civil", "electrical"},
+        "education / teaching": {"teacher", "teaching", "tutor", "lecturer", "education"},
+        "marketing / sales": {"marketing", "sales", "seo", "brand", "content"},
+        "design / creative": {"design", "designer", "ui", "ux", "creative", "graphic"},
+        "hospitality / tourism": {"hospitality", "hotel", "tourism", "travel", "guest"},
+    }
+    career_terms = career_title_terms.get((seeker.career_field or "").lower(), set())
+
+    title_matches_role = any(role in job_title or job_title in role for role in desired_roles)
+    title_matches_skill = any(skill in job_title for skill in seeker_skill_tokens)
+    title_matches_profile = any(term in job_title for term in profile_tokens)
+    title_matches_career = any(term in job_title for term in career_terms)
+
+    return (
+        item["match_percentage"] >= 12
+        and (title_matches_role or title_matches_skill or title_matches_profile or title_matches_career)
+    )
 
 
 @app.route("/")
@@ -512,17 +554,10 @@ def seeker_dashboard():
 
     keywords = extract_keywords(" ".join([resume_text, seeker.skills or ""])) if resume_text or seeker.skills else []
     recommendations = recommend_jobs_for_resume(seeker, resume_text, available_jobs_data)
-    if not recommendations:
-        recommendations = [{
-            "job": job,
-            "match_percentage": 0,
-            "similarity_score": 0.0,
-            "matched_skills": [],
-            "missing_skills": extract_skills(f"{job.title} {job.description} {job.required_skills or ''}")[:8],
-            "recommended_skills": extract_skills(f"{job.title} {job.description} {job.required_skills or ''}")[:6],
-            "skill_match_percentage": 0,
-            "is_best_match": False,
-        } for job in available_jobs_data]
+    recommendations = [
+        item for item in recommendations
+        if is_relevant_recommendation(seeker, item)
+    ]
     if recommendations:
         save_recommendation_history(seeker.id, active_resume.id if active_resume else None, recommendations)
 
@@ -556,6 +591,9 @@ def seeker_dashboard():
             "missing_skills":   item["missing_skills"],
             "recommended_skills": item["recommended_skills"],
             "skill_match_percentage": item["skill_match_percentage"],
+            "skill_match": item["skill_match_percentage"],
+            "location_match": 100 if seeker.job_location_type and job.job_location_type and seeker.job_location_type.lower() in job.job_location_type.lower() else 0,
+            "relevance_score": item["match_percentage"],
             "is_best_match":    item["is_best_match"],
             "is_saved":         job.id in saved_job_ids,
             "ats_score":        ats_data.get("score", 0) if ats_data else 0,
@@ -635,6 +673,10 @@ def api_recommendations():
     resume_text = active_resume.extracted_text if active_resume else ""
     jobs = JobListing.query.order_by(JobListing.created_at.desc()).limit(100).all()
     recommendations = recommend_jobs_for_resume(seeker, resume_text, jobs, limit=25)
+    recommendations = [
+        item for item in recommendations
+        if is_relevant_recommendation(seeker, item)
+    ]
     save_recommendation_history(seeker.id, active_resume.id if active_resume else None, recommendations)
 
     return jsonify([{

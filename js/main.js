@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const themeToggle = document.getElementById('themeToggle');
   const body        = document.body;
 
+  if (localStorage.getItem('theme') === 'light' || document.cookie.includes('theme=light')) {
+    body.classList.add('light-mode');
+  }
+
   if (themeToggle) {
     themeToggle.addEventListener('click', () => {
       const isLight = body.classList.toggle('light-mode');

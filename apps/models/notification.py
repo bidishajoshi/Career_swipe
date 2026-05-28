@@ -8,7 +8,7 @@ from ..extensions import db
 
 
 class Notification(db.Model):
-    __tablename__ = 'notifications'
+    __tablename__ = 'app_notifications'
 
     id                   = db.Column(db.Integer, primary_key=True)
     

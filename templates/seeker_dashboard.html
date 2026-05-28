@@ -112,7 +112,7 @@
               <!-- Visual area -->
               <div class="jc-visual">
                 {% if job.logo_path %}
-                  <img src="{{ url_for('static', filename='uploads/' + job.logo_path) }}"
+                  <img src="{{ url_for('static', filename=job.logo_path.replace('\\', '/').replace('static/', '')) }}"
                        class="jc-full-bg" alt="{{ job.company_name }} logo" loading="lazy">
                 {% else %}
                   <div class="jc-full-bg-placeholder"
