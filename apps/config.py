@@ -10,25 +10,30 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def _is_postgres(url: str) -> bool:
+    """Return True if the URL points to a PostgreSQL database."""
+    return url.startswith('postgresql://') or url.startswith('postgres://')
+
+
 class Config:
     # ── Security ───────────────────────────────────────────────────────────────
     SECRET_KEY = os.environ.get('SECRET_KEY', 'careerswipe-dev-secret-CHANGE-IN-PROD')
 
-    # ── Database (PostgreSQL only) ─────────────────────────────────────────────
+    # ── Database ───────────────────────────────────────────────────────────────
     # Render provides DATABASE_URL starting with "postgres://"; SQLAlchemy
     # requires "postgresql://". The replace() call fixes this automatically.
-    _raw = os.environ.get('DATABASE_URL', '')
+    _raw = os.environ.get('DATABASE_URL', 'sqlite:///careerswipe.db')
     if _raw.startswith('postgres://'):
         _raw = _raw.replace('postgres://', 'postgresql://', 1)
 
     SQLALCHEMY_DATABASE_URI = _raw
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Connection pool – safe for long-running PostgreSQL connections
+    # Connection pool — sslmode only applies to PostgreSQL, not SQLite
     SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_pre_ping': True,       # health-check before each query
-        'pool_recycle': 300,         # recycle connections every 5 min
-        'connect_args': {'sslmode': 'require'},
+        'pool_pre_ping': True,   # health-check before each query
+        'pool_recycle': 300,     # recycle connections every 5 min
+        **({'connect_args': {'sslmode': 'require'}} if _is_postgres(_raw) else {}),
     }
 
     # ── Mail (Gmail SMTP) ──────────────────────────────────────────────────────
@@ -47,19 +52,10 @@ class Config:
 
 
 class DevelopmentConfig(Config):
-    """Local development – may relax SSL if needed."""
+    """Local development – relaxes SSL for SQLite."""
     DEBUG = True
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_pre_ping': True,
-        'pool_recycle': 300,
-        # Only require SSL if DATABASE_URL is set (remote dev DB)
-        **(
-            {'connect_args': {'sslmode': 'require'}}
-            if os.environ.get('DATABASE_URL') else {}
-        ),
-    }
 
 
 class ProductionConfig(Config):
-    """Production on Render – strict SSL enforced."""
+    """Production on Render – strict SSL enforced via Config base class."""
     DEBUG = False

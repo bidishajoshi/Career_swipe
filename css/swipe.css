@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   CareerSwipe · swipe.css  — Tinder-style responsive swipe cards
+   CareerSwipe · swipe.css  — Pink Pastel Swipe Cards
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Swipe Container ──────────────────────────────────────────────────── */
@@ -32,10 +32,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: var(--bg-card);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border);
+  background: #fff;
   border-radius: 28px;
   overflow: hidden;
   cursor: grab;
@@ -43,14 +40,15 @@
   will-change: transform;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-lg);
-  transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, border-color 0.4s ease;
+  box-shadow: 0 8px 40px rgba(180, 60, 100, 0.13), 0 2px 12px rgba(180, 60, 100, 0.07);
+  transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
   transform-origin: bottom center;
+  border: none;
 }
 
 .job-card:active { cursor: grabbing; }
 
-/* Shimmer highlight */
+/* Subtle shimmer on hover */
 .job-card::before {
   content: '';
   position: absolute;
@@ -61,11 +59,11 @@
   background: linear-gradient(
     115deg,
     transparent 40%,
-    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.18) 50%,
     transparent 60%
   );
   transform: rotate(-20deg);
-  transition: transform 0.8s ease;
+  transition: transform 0.9s ease;
   pointer-events: none;
   z-index: 10;
 }
@@ -75,10 +73,9 @@
 
 /* Hover glow — only the top card */
 .job-card:last-child:hover {
-  border-color: rgba(59, 130, 246, 0.5);
   box-shadow:
-    0 25px 70px rgba(0, 0, 0, 0.6),
-    0 0 50px rgba(59, 130, 246, 0.2);
+    0 16px 60px rgba(180, 60, 100, 0.18),
+    0 4px 20px rgba(240, 130, 160, 0.15);
 }
 
 /* Stack peek — 2nd and 3rd cards */
@@ -105,14 +102,21 @@
   pointer-events: all;
 }
 
-/* ── Card Visual (Top Section — Logo/Color) ──────────────────────────── */
+/* ── Card Visual (Top Section — Pink Gradient) ───────────────────────── */
 .jc-visual {
   position: relative;
   flex: 1;
   width: 100%;
-  background: var(--bg-700);
   overflow: hidden;
   min-height: 0;
+  background: linear-gradient(
+    160deg,
+    #f9b8cb 0%,
+    #e891ac 30%,
+    #c9728e 55%,
+    #a05070 75%,
+    #7a3d5a 100%
+  );
 }
 
 .jc-full-bg {
@@ -125,6 +129,7 @@
   transform: scale(1.06);
 }
 
+/* Company logo placeholder (the big letter) */
 .jc-full-bg-placeholder {
   width: 100%;
   height: 100%;
@@ -134,52 +139,84 @@
   font-family: 'Syne', sans-serif;
   font-size: clamp(3rem, 8vw, 5.5rem);
   font-weight: 800;
-  color: var(--text-dim);
-  opacity: 0.3;
+  color: rgba(255, 255, 255, 0.22);
   transition: transform 0.5s ease;
 }
 body.light-mode .jc-full-bg-placeholder {
-  color: var(--primary);
-  opacity: 0.2;
+  color: rgba(255, 255, 255, 0.22);
 }
 .job-card:last-child:hover .jc-full-bg-placeholder {
   transform: scale(1.08);
 }
 
-/* Gradient overlay at bottom of visual */
+/* Soft gradient fade into white info section */
 .jc-gradient-overlay {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 70%;
+  height: 55%;
   background: linear-gradient(
     to top,
-    var(--bg-900) 0%,
-    rgba(6, 13, 24, 0.4) 60%,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 220, 230, 0.45) 50%,
     transparent 100%
   );
   pointer-events: none;
 }
 
-/* Match Score circle floating */
+/* ── Match Score Circle (floating top-right) ─────────────────────────── */
 .jc-floating-scores {
   position: absolute;
-  top: 1.25rem;
-  right: 1.25rem;
+  top: 1.1rem;
+  right: 1.1rem;
   z-index: 5;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
+/* Score circle styling — expects a .score-circle or .match-score element */
+.match-score,
+.score-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #bb5186;
+  box-shadow: 0 2px 12px rgba(180, 60, 100, 0.18);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  position: relative;
+}
+
+/* Conic progress ring on the score badge */
+.match-score::after,
+.score-circle::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #e8729a var(--score-pct, 18%),
+    rgba(255, 220, 230, 0.4) var(--score-pct, 18%)
+  );
+  z-index: -1;
+}
+
 /* Boost badge */
 .jc-boost-tag {
   position: absolute;
-  top: 1.25rem;
-  left: 1.25rem;
+  top: 1.1rem;
+  left: 1.1rem;
   background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 160, 0, 0.95));
-  color: #000;
+  color: #5a3300;
   padding: 4px 10px;
   border-radius: 8px;
   font-size: 10px;
@@ -187,25 +224,26 @@ body.light-mode .jc-full-bg-placeholder {
   text-transform: uppercase;
   letter-spacing: 0.07em;
   backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(255, 140, 0, 0.25);
 }
 
-/* ── Card Info (Bottom Section) ──────────────────────────────────────── */
+/* ── Card Info (Bottom White Section) ────────────────────────────────── */
 .jc-info {
-  background: var(--bg-card);
-  padding: 1.1rem 1.25rem 0.75rem;
+  background: rgba(255, 255, 255, 0.97);
+  padding: 1.1rem 1.25rem 0.85rem;
   display: flex;
   flex-direction: column;
   gap: 7px;
   position: relative;
   z-index: 2;
-  border-top: 1px solid rgba(59, 130, 246, 0.1);
+  border-top: none;
   flex-shrink: 0;
 }
 
 .jc-title-row h3 {
   font-size: clamp(17px, 3vw, 20px);
   font-weight: 700;
-  color: var(--text);
+  color: #3d1a2e;
   line-height: 1.2;
 }
 
@@ -219,31 +257,58 @@ body.light-mode .jc-full-bg-placeholder {
 .jc-comp-name {
   font-size: 14px;
   font-weight: 600;
-  color: rgba(59, 130, 246, 0.9);
+  color: #bb5186;
 }
 .jc-loc {
   font-size: 12px;
-  color: var(--text-muted, #6b87a8);
+  color: #c0607e;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.jc-loc::before {
+  content: '📍';
+  font-size: 11px;
 }
 
+/* Meta tags row */
 .jc-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
 }
 .tag-pill {
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(176, 199, 230, 0.8);
-  padding: 3px 9px;
-  border-radius: 6px;
+  background: rgba(236, 72, 153, 0.07);
+  color: #8b2a4d;
+  padding: 3px 10px;
+  border-radius: 20px;
   font-size: 11px;
   font-weight: 500;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(236, 72, 153, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Skills/tech tags */
+.jc-skills-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.skill-pill {
+  background: rgba(187, 81, 134, 0.08);
+  color: #9b3060;
+  padding: 3px 10px;
+  border-radius: 14px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1.5px solid rgba(187, 81, 134, 0.18);
 }
 
 .jc-description-fold {
   font-size: 13px;
-  color: rgba(107, 135, 168, 0.9);
+  color: #a06080;
   line-height: 1.55;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -257,8 +322,8 @@ body.light-mode .jc-full-bg-placeholder {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.6rem 1.25rem;
-  background: var(--bg-card);
+  padding: 0.5rem 1.25rem;
+  background: rgba(255, 255, 255, 0.95);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.15s;
@@ -271,12 +336,22 @@ body.light-mode .jc-full-bg-placeholder {
   font-size: 1.1rem;
   font-weight: 800;
   padding: 4px 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   letter-spacing: 0.05em;
   transition: transform 0.2s;
 }
-.h-skip  { color: #ef4444; border: 3px solid #ef4444; background: rgba(239, 68, 68, 0.1); transform: rotate(-10deg) scale(0.9); }
-.h-apply { color: #10b981; border: 3px solid #10b981; background: rgba(16, 185, 129, 0.1); transform: rotate(10deg) scale(0.9); }
+.h-skip  {
+  color: #ef4444;
+  border: 3px solid #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  transform: rotate(-10deg) scale(0.9);
+}
+.h-apply {
+  color: #bb5186;
+  border: 3px solid #bb5186;
+  background: rgba(187, 81, 134, 0.08);
+  transform: rotate(10deg) scale(0.9);
+}
 
 .job-card.swiping-left  .h-skip  { transform: rotate(-15deg) scale(1.25); opacity: 1; }
 .job-card.swiping-right .h-apply { transform: rotate(15deg)  scale(1.25); opacity: 1; }
@@ -302,83 +377,125 @@ body.light-mode .jc-full-bg-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-card);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
+
+/* Skip button — red tint */
 .skip-btn {
-  border-color: rgba(239, 68, 68, 0.5);
+  border-color: rgba(239, 68, 68, 0.45);
   color: #ef4444;
+  box-shadow: 0 4px 18px rgba(239, 68, 68, 0.12);
 }
 .skip-btn:hover {
   transform: scale(1.15);
-  background: rgba(239, 68, 68, 0.15);
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.1);
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.25);
 }
+
+/* Apply button — pink, slightly larger, pulsing */
 .apply-btn {
-  border-color: rgba(16, 185, 129, 0.5);
-  color: #10b981;
+  border-color: rgba(187, 81, 134, 0.5);
+  color: #bb5186;
   width: 72px;
   height: 72px;
   font-size: 1.7rem;
-  animation: pulse-green 3s infinite;
+  box-shadow: 0 4px 18px rgba(187, 81, 134, 0.15);
+  animation: pulse-pink 3s infinite;
 }
 .apply-btn:hover {
   transform: scale(1.15);
-  background: rgba(16, 185, 129, 0.2);
-  box-shadow: 0 0 35px rgba(16, 185, 129, 0.45);
+  background: rgba(187, 81, 134, 0.12);
+  box-shadow: 0 0 35px rgba(187, 81, 134, 0.35);
   animation-play-state: paused;
 }
 
-@keyframes pulse-green {
-  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-  70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+@keyframes pulse-pink {
+  0%   { box-shadow: 0 0 0 0 rgba(187, 81, 134, 0.4); }
+  70%  { box-shadow: 0 0 0 14px rgba(187, 81, 134, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(187, 81, 134, 0); }
 }
 
 .swipe-btn:active { transform: scale(0.88); }
 
 
-/* ── Overlays (Skip / Apply feedback) ───────────────────────────────── */
+/* ── Toast / Feedback Overlays ───────────────────────────────────────── */
 .swipe-overlay {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) scale(0.7);
   padding: 14px 32px;
-  border-radius: var(--radius-md, 14px);
+  border-radius: 16px;
   font-family: 'Syne', sans-serif;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s, transform 0.2s;
+  transition: opacity 0.2s, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 9999;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 .overlay-skip {
-  background: var(--bg-deep);
-  border: 3px solid #ef4444;
+  background: rgba(255, 255, 255, 0.92);
+  border: 2.5px solid #ef4444;
   color: #ef4444;
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.18);
 }
 .overlay-apply {
-  background: var(--bg-deep);
-  border: 3px solid #10b981;
-  color: #10b981;
+  background: rgba(255, 240, 247, 0.96);
+  border: 2.5px solid #bb5186;
+  color: #bb5186;
+  box-shadow: 0 8px 32px rgba(187, 81, 134, 0.2);
 }
 .swipe-overlay.show {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1);
 }
 
+/* Application sent toast (bottom-left, pink pill) */
+.application-toast,
+.toast-sent {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #bb5186;
+  border: 1.5px solid rgba(187, 81, 134, 0.3);
+  border-radius: 40px;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 9999;
+  box-shadow: 0 6px 24px rgba(187, 81, 134, 0.18);
+}
+.application-toast.show,
+.toast-sent.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+
 /* ── Fly-away Animations ─────────────────────────────────────────────── */
 @keyframes flyRight {
   from { transform: translateX(0) rotate(0); opacity: 1; }
-  to   { transform: translateX(130%) rotate(25deg); opacity: 0; }
+  to   { transform: translateX(130%) rotate(22deg); opacity: 0; }
 }
 @keyframes flyLeft {
   from { transform: translateX(0) rotate(0); opacity: 1; }
-  to   { transform: translateX(-130%) rotate(-25deg); opacity: 0; }
+  to   { transform: translateX(-130%) rotate(-22deg); opacity: 0; }
 }
 .fly-right {
   animation: flyRight 0.42s cubic-bezier(0.55, 0, 1, 0.45) forwards;
@@ -389,14 +506,14 @@ body.light-mode .jc-full-bg-placeholder {
   pointer-events: none;
 }
 
-/* Loading spinner on card */
+/* ── Card Loading Spinner ─────────────────────────────────────────────── */
 .card-loading-spinner {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 251, 252, 0.6);
+  background: rgba(255, 245, 248, 0.75);
   z-index: 20;
   border-radius: 28px;
 }
@@ -404,8 +521,8 @@ body.light-mode .jc-full-bg-placeholder {
   content: '';
   width: 36px;
   height: 36px;
-  border: 3px solid rgba(59, 130, 246, 0.2);
-  border-top-color: var(--primary, #3b82f6);
+  border: 3px solid rgba(187, 81, 134, 0.2);
+  border-top-color: #bb5186;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -437,8 +554,6 @@ body.light-mode .jc-full-bg-placeholder {
   .apply-btn  { width: 66px; height: 66px; font-size: 1.5rem; }
   .jc-floating-scores { top: 1rem; right: 1rem; }
   .jc-boost-tag { top: 1rem; left: 1rem; }
-  .jc-meta { gap: 8px; }
-  .jc-meta-item { font-size: 13px; }
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -477,6 +592,5 @@ body.light-mode .jc-full-bg-placeholder {
   .h-skip, .h-apply { font-size: 0.9rem; padding: 3px 9px; }
   .jc-floating-scores { top: 0.75rem; right: 0.75rem; gap: 5px; }
   .jc-boost-tag { top: 0.75rem; left: 0.75rem; font-size: 9px; }
-  .jc-title-row { padding: 0 0.5rem; }
-  .jc-meta-item { font-size: 12px; }
+  .match-score, .score-circle { width: 44px; height: 44px; font-size: 10px; }
 }
