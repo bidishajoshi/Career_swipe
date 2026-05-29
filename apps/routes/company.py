@@ -17,7 +17,7 @@ from flask import (
 from ..extensions import db
 from ..models import Company, JobListing, JobSwipe, Notification
 from ..services.email_service import send_status_update_email
-from ..services.notification_service import create_notification
+from app import create_notification
 from utils.helpers import allowed_file
 
 company_bp = Blueprint('company', __name__)
@@ -163,20 +163,6 @@ def update_applicant(swipe_id, action):
     )
 
     if action == 'accept':
-        accepted_count = JobSwipe.query.filter_by(job_id=job.id, status='accepted').count()
-        if accepted_count >= positions_needed:
-            job_title = job.title
-            db.session.delete(job)
-            db.session.commit()
-            flash(
-                f'Applicant {action_text}. Job "{job_title}" is now filled and has been closed.',
-                'success',
-            )
-            return redirect(url_for('company.company_dashboard'))
-
-    flash(f'Applicant {action_text}.', 'success')
-    return redirect(url_for('company.company_dashboard'))
-
         accepted_count = JobSwipe.query.filter_by(job_id=job.id, status='accepted').count()
         if accepted_count >= positions_needed:
             job_title = job.title

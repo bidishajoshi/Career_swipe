@@ -136,8 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const mapping = {
       accepted: 'Hired',
       rejected: 'Rejected',
+      reject: 'Rejected',
       interview: 'Interview',
       shortlisted: 'Shortlist',
+      shortlist: 'Shortlist',
       application: 'Application',
       system: 'System',
     };

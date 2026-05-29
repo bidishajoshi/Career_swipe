@@ -15,7 +15,7 @@ Create Date: 2026-04-28
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.engine.reflection import Inspector
+from sqlalchemy import inspect
 
 # ── Alembic metadata ──────────────────────────────────────────────────────────
 revision    = '001_full_schema'
@@ -25,27 +25,15 @@ depends_on  = None
 
 
 def _table_exists(conn, name):
-    """Return True if 'name' table exists in the public schema."""
-    result = conn.execute(
-        sa.text(
-            "SELECT EXISTS (SELECT 1 FROM information_schema.tables "
-            "WHERE table_schema='public' AND table_name=:t)"
-        ),
-        {"t": name}
-    )
-    return result.scalar()
+    """Return True if 'name' table exists in the database."""
+    inspector = inspect(conn)
+    return name in inspector.get_table_names()
 
 
 def _column_exists(conn, table, column):
     """Return True if 'column' exists on 'table'."""
-    result = conn.execute(
-        sa.text(
-            "SELECT EXISTS (SELECT 1 FROM information_schema.columns "
-            "WHERE table_schema='public' AND table_name=:t AND column_name=:c)"
-        ),
-        {"t": table, "c": column}
-    )
-    return result.scalar()
+    inspector = inspect(conn)
+    return any(c['name'] == column for c in inspector.get_columns(table))
 
 
 def _add_col(conn, table, column, definition):

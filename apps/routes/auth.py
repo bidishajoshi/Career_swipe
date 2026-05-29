@@ -181,7 +181,6 @@ def register_seeker():
             desired_roles     = request.form.get('desired_roles'),
             salary_expectation= request.form.get('salary'),
             availability      = request.form.get('availability'),
-            country           = request.form.get('country', ''),
             is_verified       = True,
         )
         db.session.add(seeker)
@@ -211,8 +210,6 @@ def register_seeker():
         salary           = request.form.get('salary') if request.method == 'POST' else resume_data.get('salary'),
         availability     = request.form.get('availability') if request.method == 'POST' else resume_data.get('availability'),
         skills           = request.form.get('skills') if request.method == 'POST' else resume_data.get('skills'),
-        country          = request.form.get('country') if request.method == 'POST' else resume_data.get('country', ''),
-        source           = request.form.get('source') if request.method == 'POST' else '',
         resume_path      = resume_data.get('resume_path'),
         eligibility_questions = [q.to_dict() for q in eligibility_questions],
     )

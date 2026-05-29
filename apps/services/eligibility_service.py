@@ -245,55 +245,65 @@ class EligibilityService:
                     'is_mandatory': True,
                 },
                 {
-                    'question_text': 'Are you at least 18 years old?',
-                    'question_type': 'yes_no',
-                    'field_type': 'checkbox',
+                    'question_text': 'What is your age?',
+                    'question_type': 'age_range',
+                    'field_type': 'number',
                     'display_order': 2,
                     'is_mandatory': True,
                 },
                 {
-                    'question_text': 'Are you available for the required job type?',
-                    'question_type': 'yes_no',
-                    'field_type': 'checkbox',
+                    'question_text': 'Are you available for the required job type (Full-time/Part-time)?',
+                    'question_type': 'availability',
+                    'field_type': 'select',
+                    'field_options': json.dumps(['Full-time', 'Part-time', 'Contract', 'Flexible']),
                     'display_order': 3,
                     'is_mandatory': True,
                 },
                 {
-                    'question_text': 'Do you have relevant work experience for this position?',
-                    'question_type': 'yes_no',
-                    'field_type': 'checkbox',
+                    'question_text': 'Years of relevant work experience?',
+                    'question_type': 'experience',
+                    'field_type': 'number',
                     'display_order': 4,
-                    'is_mandatory': True,
+                    'is_mandatory': False,
                 },
                 {
-                    'question_text': 'Would you be willing to relocate if required?',
-                    'question_type': 'yes_no',
-                    'field_type': 'checkbox',
+                    'question_text': 'Are you willing to relocate if required?',
+                    'question_type': 'relocation',
+                    'field_type': 'select',
+                    'field_options': json.dumps(['Yes', 'No', 'Maybe']),
                     'display_order': 5,
-                    'is_mandatory': True,
+                    'is_mandatory': False,
+                },
+                {
+                    'question_text': 'What is your expected salary range (annual)?',
+                    'question_type': 'salary',
+                    'field_type': 'text',
+                    'display_order': 6,
+                    'is_mandatory': False,
+                },
+                {
+                    'question_text': 'What is your notice period (days)?',
+                    'question_type': 'notice_period',
+                    'field_type': 'number',
+                    'display_order': 7,
+                    'is_mandatory': False,
                 },
                 {
                     'question_text': 'I confirm I have the required skills for this position',
-                    'question_type': 'yes_no',
+                    'question_type': 'skills_confirmation',
                     'field_type': 'checkbox',
-                    'display_order': 6,
+                    'display_order': 8,
                     'is_mandatory': True,
                 },
             ]
 
             for q_data in default_questions:
+                # Check if question already exists
                 existing = EligibilityQuestion.query.filter_by(
                     question_text=q_data['question_text']
                 ).first()
 
-                if existing:
-                    existing.question_type = q_data['question_type']
-                    existing.field_type = q_data['field_type']
-                    existing.display_order = q_data['display_order']
-                    existing.is_mandatory = q_data['is_mandatory']
-                    existing.description = q_data.get('description')
-                    existing.field_options = q_data.get('field_options')
-                else:
+                if not existing:
                     question = EligibilityQuestion(**q_data)
                     db.session.add(question)
 

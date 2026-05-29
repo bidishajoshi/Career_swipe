@@ -902,18 +902,6 @@ def company_dashboard():
         .all()
     )
 
-    job_application_counts = {job.id: 0 for job in jobs}
-    job_accepted_counts = {job.id: 0 for job in jobs}
-    for sw in swipes:
-        if sw.job_id in job_application_counts:
-            job_application_counts[sw.job_id] += 1
-            if sw.status == "accepted":
-                job_accepted_counts[sw.job_id] += 1
-
-    for job in jobs:
-        job.application_count = job_application_counts.get(job.id, 0)
-        job.accepted_count = job_accepted_counts.get(job.id, 0)
-
     applicants = [
         {
             "seeker_id":   sw.seeker.id,
@@ -946,15 +934,6 @@ def post_job():
         return redirect(url_for("login_company"))
 
     if request.method == "POST":
-        try:
-            number_of_positions = int(request.form.get("number_of_positions", "1"))
-        except (TypeError, ValueError):
-            number_of_positions = 0
-
-        if number_of_positions < 1:
-            flash("Please enter a valid number of hires for this job.", "error")
-            return redirect(url_for("post_job"))
-
         new_job = JobListing(
             company_id=session["company_id"],
             title=request.form["title"],
@@ -967,7 +946,6 @@ def post_job():
             min_experience=request.form.get("min_experience", 0, type=int),
             salary=request.form.get("salary", ""),
             max_salary=request.form.get("max_salary", 0, type=int),
-            number_of_positions=number_of_positions,
             tags=request.form.get("tags", ""),
         )
         db.session.add(new_job)
@@ -1000,8 +978,6 @@ def update_applicant(swipe_id, action):
     job    = swipe.job_listing
     action_text = action_map.get(action, action + "ed")
 
-    positions_needed = job.number_of_positions or 1
-
     msg = Message(f"Update on your application: {job.title}", recipients=[seeker.email])
     msg.html = f"""
     <div style="font-family:sans-serif;max-width:520px;margin:auto;background:#0f172a;padding:2rem;border-radius:16px;color:#fff">
@@ -1014,6 +990,8 @@ def update_applicant(swipe_id, action):
         mail.send(msg)
     except Exception:
         pass
+
+    flash(f"Applicant {action_text}.", "success")
 
     # ✅ Trigger seeker notification
     notif_msg = f"Your application for {job.title} at {job.company.company_name} has been {action_text}."
@@ -1029,16 +1007,6 @@ def update_applicant(swipe_id, action):
         type=action
     )
 
-    if action == "accept":
-        accepted_count = JobSwipe.query.filter_by(job_id=job.id, status='accepted').count()
-        if accepted_count >= positions_needed:
-            job_title = job.title
-            db.session.delete(job)
-            db.session.commit()
-            flash(f"Applicant {action_text}. Job '{job_title}' is now filled and has been closed.", "success")
-            return redirect(url_for("company_dashboard"))
-
-    flash(f"Applicant {action_text}.", "success")
     return redirect(url_for("company_dashboard"))
 
 

@@ -59,8 +59,7 @@
           <div class="field-row">
             <div class="field">
               <label>Gender</label>
-              <select name="gender" required>
-                <option value="">-- Select gender --</option>
+              <select name="gender">
                 <option {% if gender == 'Female' %}selected{% endif %}>Female</option>
                 <option {% if gender == 'Male' %}selected{% endif %}>Male</option>
                 <option {% if gender == 'Other' %}selected{% endif %}>Other</option>
@@ -68,13 +67,13 @@
             </div>
             <div class="field">
               <label>Date of Birth</label>
-              <input type="date" name="dob" required value="{{ dob }}">
+              <input type="date" name="dob" value="{{ dob }}">
             </div>
           </div>
 
           <div class="field">
             <label>Country</label>
-            <input type="text" name="country" id="field-country" required placeholder="e.g. Nepal, India, USA, etc." value="{{ country if country else '' }}">
+            <input type="text" name="country" id="field-country" placeholder="e.g. Nepal, India, USA, etc." value="">
           </div>
 
           <div class="field">
@@ -223,6 +222,7 @@
                 <div class="text-muted" style="margin-bottom:.5rem;">{{ q.description }}</div>
               {% endif %}
 
+              {% if q.field_type == 'checkbox' %}
               <div class="radio-group" style="display:flex; gap:1rem; margin-top:0.5rem;">
                 <label style="display:flex; align-items:center; gap:0.5rem;">
                   <input type="radio" name="question_{{ q.id }}" value="Yes" {% if q.is_mandatory %}required{% endif %}>
@@ -233,6 +233,18 @@
                   <span>No</span>
                 </label>
               </div>
+              {% elif q.field_type == 'select' %}
+              <select name="question_{{ q.id }}">
+                <option value="">-- Select --</option>
+                {% for option in q.field_options %}
+                <option value="{{ option }}">{{ option }}</option>
+                {% endfor %}
+              </select>
+              {% elif q.field_type == 'number' %}
+              <input type="number" name="question_{{ q.id }}" value="">
+              {% else %}
+              <input type="text" name="question_{{ q.id }}" value="">
+              {% endif %}
             </div>
             {% endfor %}
           {% else %}
@@ -273,13 +285,12 @@
 
           <div class="field">
             <label>How did you hear about us?</label>
-            <select name="source" required>
-              <option value="">-- Select source --</option>
-              <option {% if source == 'LinkedIn' %}selected{% endif %}>LinkedIn</option>
-              <option {% if source == 'Friend/Referral' %}selected{% endif %}>Friend/Referral</option>
-              <option {% if source == 'Job Board' %}selected{% endif %}>Job Board</option>
-              <option {% if source == 'Social Media' %}selected{% endif %}>Social Media</option>
-              <option {% if source == 'Other' %}selected{% endif %}>Other</option>
+            <select name="source">
+              <option>LinkedIn</option>
+              <option>Friend/Referral</option>
+              <option>Job Board</option>
+              <option>Social Media</option>
+              <option>Other</option>
             </select>
           </div>
 
