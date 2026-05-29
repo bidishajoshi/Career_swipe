@@ -179,5 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  refreshNotifications();
+  // On page load, only fetch the unread count badge.
+  // Full notification list is loaded only when the bell is clicked.
+  loadUnreadCount();
 });

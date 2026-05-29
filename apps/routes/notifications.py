@@ -31,7 +31,7 @@ def notifications_history():
     """Display notifications history page"""
     user_id, user_type = _current_user()
     if not user_id:
-        return redirect(url_for('auth.index'))
+        return redirect(url_for('index'))
 
     page = request.args.get('page', 1, type=int)
     per_page = 20
@@ -57,7 +57,7 @@ def notification_preferences():
     """Display notification preferences page"""
     user_id, user_type = _current_user()
     if not user_id:
-        return redirect(url_for('auth.index'))
+        return redirect(url_for('index'))
 
     prefs = NotificationService.get_preferences(user_id, user_type)
     
