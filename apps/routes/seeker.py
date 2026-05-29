@@ -18,6 +18,7 @@ from ..services.email_service import send_application_emails
 from ..services.notification_service import create_notification
 from utils.helpers import allowed_file
 from utils.tfidf import parse_resume, match_resume_to_job, extract_keywords, filter_jobs_by_preferences
+from utils.resume_parser import process_resume
 from utils.ats import calculate_ats_score
 
 seeker_bp = Blueprint('seeker', __name__)
@@ -223,6 +224,9 @@ def edit_seeker_profile():
             fname       = secure_filename(f'{uuid.uuid4()}_{resume_file.filename}')
             resume_path = os.path.join(current_app.config['RESUME_FOLDER'], fname)
             resume_file.save(resume_path)
+            converted = process_resume(resume_path, current_app.config['RESUME_FOLDER'])
+            if converted:
+                resume_path = converted.get('resume_path', resume_path)
 
         seeker.first_name  = request.form['first_name']
         seeker.last_name   = request.form['last_name']

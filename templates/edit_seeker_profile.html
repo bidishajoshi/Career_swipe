@@ -133,8 +133,9 @@
   <!-- RESUME -->
   <div class="form-section-label">Resume</div>
   {% if seeker.resume_path %}
+  {% set resume_url = url_for('static', filename=seeker.resume_path.replace('\\', '/').replace('static/', '')) %}
   <div class="current-file-notice">
-     Current resume on file. Upload a new one to replace it.
+     Current resume on file. <a href="{{ resume_url }}" download>Download PDF</a>. Upload a new one to replace it.
   </div>
   {% endif %}
 

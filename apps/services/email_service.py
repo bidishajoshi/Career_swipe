@@ -3,7 +3,7 @@ app/services/email_service.py – Professional email notification service.
 Handles all email communications integrated with notification system.
 """
 
-from flask_mail import Message
+from utils.mail_helper import Message
 from typing import List, Optional
 import os
 from ..extensions import mail

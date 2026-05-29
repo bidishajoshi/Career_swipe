@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory
-from flask_mail import Message
+from utils.mail_helper import Message
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import HTTPException

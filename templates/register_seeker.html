@@ -318,7 +318,11 @@
           <div class="field">
             <label>Upload your resume</label>
             {% if resume_path %}
-            <div class="text-muted" style="margin-bottom:0.5rem;">Resume already uploaded: {{ resume_path.split('/')[-1] }}</div>
+            {% set resume_url = url_for('static', filename=resume_path.replace('\\', '/').replace('static/', '')) %}
+            <div class="text-muted" style="margin-bottom:0.5rem;">
+              Resume already uploaded: {{ resume_path.replace('\\', '/').split('/')[-1] }}
+              <a href="{{ resume_url }}" download style="margin-left:0.75rem;">Download PDF</a>
+            </div>
             {% endif %}
             <input type="file" name="resume" accept=".pdf,.doc,.docx" {% if not resume_path %}required{% endif %}>
           </div>
@@ -345,7 +349,7 @@
           <input type="hidden" name="existing_resume" value="{{ resume_path }}">
 
           <div class="step-footer">
-            <button type="button" class="btn btn-outline" onclick="prevStep(5)">← Back</button>
+            <button type="button" class="btn btn-outline" onclick="editApplication()">← Edit Application</button>
             <button type="submit" class="btn btn-primary">Submit Application & Create Account</button>
           </div>
         </div>
@@ -357,6 +361,16 @@
 {% endblock %}
 
 {% block scripts %}
+<style>
+.field-error {
+  color: #ef4444;
+  font-size: 0.85rem;
+  margin-top: 0.4rem;
+}
+.field-error + .field-error {
+  margin-top: 0.2rem;
+}
+</style>
 <script>
 let currentStep = 2;
 
@@ -374,36 +388,79 @@ function updateProgressBar(step) {
   });
 }
 
-function nextStep(step) {
-  // Basic validation for current step
+function createErrorElement(message) {
+  const error = document.createElement('div');
+  error.className = 'field-error';
+  error.textContent = message;
+  return error;
+}
+
+function clearFieldError(field) {
+  const parent = field.closest('.field') || field.parentElement;
+  const existing = parent.querySelector('.field-error');
+  if (existing) {
+    existing.remove();
+  }
+  if (field.type !== 'checkbox') {
+    field.style.borderColor = 'var(--border)';
+  } else {
+    parent.style.color = 'inherit';
+  }
+}
+
+function markFieldInvalid(field, message) {
+  const parent = field.closest('.field') || field.parentElement;
+  let error = parent.querySelector('.field-error');
+  if (!error) {
+    error = createErrorElement(message);
+    parent.appendChild(error);
+  } else {
+    error.textContent = message;
+  }
+  if (field.type === 'checkbox') {
+    parent.style.color = '#ef4444';
+  } else {
+    field.style.borderColor = '#ef4444';
+  }
+}
+
+function validateCurrentStep() {
   const activeContent = document.querySelector('.step-content.active');
   const requiredFields = activeContent.querySelectorAll('[required]');
   let valid = true;
-  
+
   requiredFields.forEach(field => {
+    clearFieldError(field);
     if (field.type === 'checkbox') {
       if (!field.checked) {
-        field.parentElement.style.color = '#ef4444';
+        markFieldInvalid(field, 'This field is required.');
         valid = false;
-      } else {
-        field.parentElement.style.color = 'inherit';
       }
     } else {
       if (!field.value || !field.checkValidity()) {
-        field.style.borderColor = '#ef4444';
+        const label = field.closest('.field')?.querySelector('label')?.innerText || field.name;
+        const cleanLabel = label.replace('*', '').trim() || 'This field';
+        markFieldInvalid(field, `${cleanLabel} is required.`);
         valid = false;
-      } else {
-        field.style.borderColor = 'var(--border)';
       }
     }
   });
 
   if (!valid) {
-    alert("Please fill in all required fields correctly before proceeding.");
+    const firstError = document.querySelector('.step-content.active .field-error');
+    if (firstError) {
+      firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+  return valid;
+}
+
+function nextStep(step) {
+  if (!validateCurrentStep()) {
     return;
   }
 
-  // Transition
+  const activeContent = document.querySelector('.step-content.active');
   activeContent.classList.remove('active');
   document.getElementById(`step-${step}`).classList.add('active');
   currentStep = step;
@@ -419,17 +476,29 @@ function prevStep(step) {
   window.scrollTo(0, 0);
 }
 
+function editApplication() {
+  prevStep(5);
+}
+
 function generateReview() {
+  if (!validateCurrentStep()) {
+    return;
+  }
+
   const form = document.getElementById('application-form');
   const formData = new FormData(form);
   const container = document.getElementById('review-container');
   
   const eligibilityAnswers = [];
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith('question_')) {
-      eligibilityAnswers.push(value || 'No answer');
-    }
-  }
+  const questionNames = new Set(Array.from(formData.keys()).filter(key => key.startsWith('question_')));
+  questionNames.forEach(name => {
+    const field = form.querySelector(`[name="${name}"]`);
+    const questionLabel = field?.closest('.field')?.querySelector('label')?.innerText || name;
+    eligibilityAnswers.push({
+      question: questionLabel.replace('*', '').trim(),
+      answer: formData.get(name) || 'No answer',
+    });
+  });
 
   const resumeFile = formData.get('resume');
   const resumeLabel = resumeFile && resumeFile.name ? resumeFile.name : (formData.get('existing_resume') ? formData.get('existing_resume').split('/').pop() : 'No resume uploaded');
@@ -463,8 +532,8 @@ function generateReview() {
        <p><strong>Resume:</strong> ${resumeLabel}</p>
     </div>
     <div style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
-       <h4 style="color:var(--primary); margin-bottom: 0.5rem; font-size: 12px; text-transform: uppercase;">Eligibility Answers</h4>
-       ${eligibilityAnswers.length ? '<ul style="padding-left: 1rem;">' + eligibilityAnswers.map(answer => `<li>${answer}</li>`).join('') + '</ul>' : '<p>No eligibility answers provided.</p>'}
+       <h4 style="color:var(--primary); margin-bottom: 0.5rem; font-size: 12px; text-transform: uppercase;">Eligibility Questions</h4>
+       ${eligibilityAnswers.length ? '<ul style="padding-left: 1rem;">' + eligibilityAnswers.map(item => `<li><strong>${item.question}</strong>: ${item.answer}</li>`).join('') + '</ul>' : '<p>No eligibility answers provided.</p>'}
     </div>
   `;
   

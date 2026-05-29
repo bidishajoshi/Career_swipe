@@ -59,6 +59,8 @@ def upload_resume_step():
         resume_file.save(resume_path)
 
         extracted = process_resume(resume_path, current_app.config['RESUME_FOLDER'])
+        if extracted:
+            resume_path = extracted.get('resume_path', resume_path)
 
         if extracted:
             full_name = f"{extracted.get('first_name', '')} {extracted.get('last_name', '')}".strip()
@@ -156,6 +158,9 @@ def register_seeker():
             fname       = secure_filename(f'{uuid.uuid4()}_{resume_file.filename}')
             resume_path = os.path.join(current_app.config['RESUME_FOLDER'], fname)
             resume_file.save(resume_path)
+            converted = process_resume(resume_path, current_app.config['RESUME_FOLDER'])
+            if converted:
+                resume_path = converted.get('resume_path', resume_path)
 
         if not resume_path:
             flash('Resume is required. Please upload your resume before submitting.', 'error')
