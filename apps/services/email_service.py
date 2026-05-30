@@ -3,13 +3,14 @@ app/services/email_service.py – Professional email notification service.
 Handles all email communications integrated with notification system.
 """
 
-from utils.mail_helper import Message
-from typing import List, Optional
 import os
+from typing import List, Optional
+from utils.mail_helper import Message
 from ..extensions import mail
 
 
 class EmailService:
+    # pylint: disable=broad-except, too-many-arguments, line-too-long
     """Service layer for email operations"""
 
     # Email templates with professional styling
@@ -348,15 +349,20 @@ def send_application_emails(seeker_email: str, seeker_name: str, company_email: 
 
 
 def send_status_update_email(company_email: str, company_name: str, seeker_name: str, job_title: str, new_status: str) -> None:
-    """Send status update email to company."""
-    EmailService.send_application_accepted(
-        company_email=company_email,
-        company_name=company_name,
-        seeker_name=seeker_name,
-        job_title=job_title,
-    ) if new_status == 'accepted' else EmailService.send_application_rejected(
-        company_email=company_email,
-        company_name=company_name,
-        seeker_name=seeker_name,
-        job_title=job_title,
-    )
+    """Send status update email to company or seeker based on new_status.
+    new_status should be 'accepted' or 'rejected'.
+    """
+    if new_status == 'accepted':
+        EmailService.send_application_accepted(
+            seeker_email=company_email,
+            seeker_name=seeker_name,
+            job_title=job_title,
+            company_name=company_name,
+        )
+    else:
+        EmailService.send_application_rejected(
+            seeker_email=company_email,
+            seeker_name=seeker_name,
+            job_title=job_title,
+            company_name=company_name,
+        )

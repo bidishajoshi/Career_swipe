@@ -33,11 +33,11 @@ def eligibility_form(job_id):
     seeker_id, user_type = _current_user()
     
     if user_type != 'seeker' or not seeker_id:
-        return redirect(url_for('auth.login_seeker'))
+        return redirect(url_for('login_seeker'))
 
     job = JobListing.query.get(job_id)
     if not job:
-        return redirect(url_for('jobs.browse_jobs'))
+        return redirect(url_for('seeker_dashboard'))
 
     questions = EligibilityService.get_eligible_questions(job_id)
     seeker = Seeker.query.get(seeker_id)

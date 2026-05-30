@@ -25,12 +25,22 @@ class Seeker(db.Model):
     # Contact & location
     phone             = db.Column(db.String(30))
     address           = db.Column(db.String(500))
+    linkedin          = db.Column(db.String(500))
+    portfolio         = db.Column(db.String(500))
+    profile_photo_path= db.Column(db.String(500))
 
     # Professional background
     education         = db.Column(db.String(255))
+    education_history = db.Column(db.Text)
     experience        = db.Column(db.Text)
     skills            = db.Column(db.Text)
+    certifications    = db.Column(db.Text)
     resume_path       = db.Column(db.String(500))
+    employment_type   = db.Column(db.String(50))
+    source            = db.Column(db.String(100))
+    profile_completion= db.Column(db.Integer, default=0)
+    draft_data        = db.Column(db.Text)
+    is_published      = db.Column(db.Boolean, default=True)
 
     # Demographics
     gender            = db.Column(db.String(20))
@@ -117,11 +127,46 @@ class Company(db.Model):
 
     # Company details
     phone          = db.Column(db.String(30))
+    hr_name        = db.Column(db.String(150))
     company_address= db.Column(db.String(500))
+    headquarters   = db.Column(db.String(255))
     description    = db.Column(db.Text)
+    mission        = db.Column(db.Text)
+    vision         = db.Column(db.Text)
+    culture        = db.Column(db.Text)
+    perks          = db.Column(db.Text)
     industry       = db.Column(db.String(150))
+    company_type   = db.Column(db.String(100))
+    company_size   = db.Column(db.String(50))
+    founded_year   = db.Column(db.Integer)
     website        = db.Column(db.String(300))
     logo_path      = db.Column(db.String(500))
+    banner_path    = db.Column(db.String(500))
+    gallery_paths  = db.Column(db.Text)
+
+    # Hiring
+    hiring_frequency    = db.Column(db.String(50))
+    remote_hiring       = db.Column(db.Boolean, default=False)
+    international_hiring= db.Column(db.Boolean, default=False)
+    preferred_locations = db.Column(db.Text)
+    hiring_categories   = db.Column(db.Text)
+    work_mode           = db.Column(db.String(50))
+    open_positions      = db.Column(db.Text)
+    number_of_vacancies = db.Column(db.Integer, default=0)
+
+    # Social & verification
+    linkedin_url          = db.Column(db.String(500))
+    facebook_url          = db.Column(db.String(500))
+    instagram_url         = db.Column(db.String(500))
+    twitter_url           = db.Column(db.String(500))
+    youtube_url           = db.Column(db.String(500))
+    business_registration = db.Column(db.String(150))
+    verification_document = db.Column(db.String(500))
+    profile_completion    = db.Column(db.Integer, default=0)
+    draft_data            = db.Column(db.Text)
+    is_published          = db.Column(db.Boolean, default=False)
+    notification_enabled  = db.Column(db.Boolean, default=True)
+    last_login            = db.Column(db.DateTime)
 
     # Account status
     verification_token = db.Column(db.String(100))

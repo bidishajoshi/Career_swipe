@@ -116,6 +116,7 @@
     }
 
     const jobId = card.dataset.jobId;
+    let shouldRemoveCard = true;
     card.style.transition = '';
     card.classList.remove('swiping-right', 'swiping-left');
     card.classList.add(direction === 'right' ? 'fly-right' : 'fly-left');
@@ -131,11 +132,19 @@
       if (data?.direction === 'right') {
         showToast('✅ Application sent!', 'success');
       }
-    }).catch(() => {
-      showToast('⚠️ Connection issue. Swipe saved locally.', 'warning');
+    }).catch(error => {
+      shouldRemoveCard = false;
+      card.classList.remove('fly-right', 'fly-left');
+      card.style.pointerEvents = '';
+      resetCard(card);
+      showToast(error.message || 'Unable to submit. Please try again.', 'warning');
     });
 
     setTimeout(() => {
+      if (!shouldRemoveCard) {
+        isBusy = false;
+        return;
+      }
       card.remove();
       isBusy = false;
       const top = getTopCard();
@@ -150,7 +159,13 @@
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ job_id: jobId, direction: direction }),
-    }).then(response => response.json());
+    }).then(async response => {
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to submit. Please try again.');
+      }
+      return data;
+    });
   }
 
   function addButtonListeners() {

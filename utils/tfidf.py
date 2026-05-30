@@ -37,8 +37,8 @@ SKILL_TERMS = {
     "patient care", "php", "postgresql", "power bi", "project management",
     "python", "quality assurance", "react", "recruiting", "research",
     "risk management", "ruby", "rust", "sales", "scrum", "seo", "sql",
-    "statistics", "swift", "tableau", "teaching", "testing", "typescript",
-    "ui", "ux", "vue", "writing"
+    "statistics", "staad pro", "swift", "tableau", "teaching", "testing",
+    "typescript", "ui", "ux", "vue", "writing"
 }
 
 QUALIFICATION_TERMS = {

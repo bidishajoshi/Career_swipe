@@ -17,7 +17,8 @@ from flask import (
 from ..extensions import db
 from ..models import Company, JobListing, JobSwipe, Notification
 from ..services.email_service import send_status_update_email
-from app import create_notification
+from ..services.notification_service import create_notification
+from utils.applicant_presenter import build_applicant_cards, existing_static_path
 from utils.helpers import allowed_file
 
 company_bp = Blueprint('company', __name__)
@@ -48,6 +49,7 @@ def company_dashboard():
     company = _require_company()
     if not company:
         return redirect(url_for('auth.login_company'))
+    company.logo_path = existing_static_path(company.logo_path)
 
     jobs = (
         JobListing.query
@@ -79,23 +81,7 @@ def company_dashboard():
         job.application_count = job_application_counts.get(job.id, 0)
         job.accepted_count = job_accepted_counts.get(job.id, 0)
 
-    applicants = [
-        {
-            'seeker_id':   sw.seeker.id,
-            'first_name':  sw.seeker.first_name,
-            'last_name':   sw.seeker.last_name,
-            'email':       sw.seeker.email,
-            'skills':      sw.seeker.skills,
-            'resume_path': sw.seeker.resume_path,
-            'job_title':   sw.job_listing.title,
-            'applied_at':  sw.created_at,
-            'status':      sw.status,
-            'swipe_id':    sw.id,
-            'match_score': sw.match_score,
-            'ats_score':   sw.ats_score,
-        }
-        for sw in swipes
-    ]
+    applicants = build_applicant_cards(swipes)
 
     return render_template(
         'company_dashboard.html',
@@ -127,7 +113,7 @@ def update_applicant(swipe_id, action):
 
     seeker = swipe.seeker
     job    = swipe.job_listing
-    positions_needed = job.number_of_positions or 1
+    positions_needed = getattr(job, 'number_of_positions', None) or getattr(job, 'number_of_vacancies', None) or 1
 
     # Send status-update email to seeker
     send_status_update_email(

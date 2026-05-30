@@ -1,4 +1,12 @@
 import os, sys
+
+if __name__ == "__main__":
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    venv_python = os.path.join(project_root, "venv", "Scripts", "python.exe")
+    current_python = os.path.abspath(sys.executable)
+    if os.path.exists(venv_python) and current_python.lower() != os.path.abspath(venv_python).lower():
+        os.execv(venv_python, [venv_python] + sys.argv)
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -23,6 +31,7 @@ from utils.tfidf import (
     parse_resume, match_resume_to_job, extract_keywords, extract_skills,
     recommend_jobs_for_resume
 )
+from utils.applicant_presenter import build_applicant_cards, existing_static_path
 from utils.ats import calculate_ats_score
 from utils.resume_parser import process_resume
 
@@ -94,6 +103,58 @@ ALLOWED_LOGO   = {"png", "jpg", "jpeg", "webp"}
 
 def allowed_file(filename, allowed):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed
+
+
+def safe_check_password(password_hash, password):
+    """Validate a password hash without letting malformed legacy hashes crash login."""
+    if not password_hash or not password:
+        return False
+    try:
+        return check_password_hash(password_hash, password)
+    except (TypeError, ValueError):
+        return False
+
+
+def apply_to_job(seeker, job):
+    """Create a right-swipe application and send side effects once."""
+    existing = JobSwipe.query.filter_by(seeker_id=seeker.id, job_id=job.id).first()
+    if existing:
+        return existing, False
+
+    resume_text = parse_resume(seeker.resume_path) if seeker.resume_path and os.path.exists(seeker.resume_path) else ""
+    job_full_text = f"{job.title} {job.description} {job.required_skills}"
+    match_score = match_resume_to_job(resume_text, job_full_text) if resume_text else 0
+    ats_score = calculate_ats_score(resume_text, job_full_text).get("score", 0) if resume_text else 0
+
+    application = JobSwipe(
+        seeker_id=seeker.id,
+        job_id=job.id,
+        direction="right",
+        status="pending",
+        match_score=float(match_score),
+        ats_score=float(ats_score),
+        ai_rank_score=float(match_score * 0.7 + ats_score * 0.3),
+    )
+    db.session.add(application)
+    db.session.commit()
+
+    if job.company:
+        send_application_emails(
+            seeker.email,
+            f"{seeker.first_name} {seeker.last_name}",
+            job.company.email,
+            job.company.company_name,
+            job.title,
+            seeker.resume_path,
+        )
+        create_notification(
+            user_id=job.company_id,
+            user_type="company",
+            message=f"New applicant: {seeker.first_name} {seeker.last_name} for '{job.title}'",
+            type="application",
+        )
+
+    return application, True
 
 
 # ── Email Helpers ─────────────────────────────────────────────────────────────
@@ -274,6 +335,11 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/register")
+def register_role():
+    return render_template("register_role.html")
+
+
 @app.route("/upload-resume", methods=["GET", "POST"])
 def upload_resume_step():
     if request.method == "POST":
@@ -291,9 +357,6 @@ def upload_resume_step():
                 extracted_name = f"{extracted_data.get('first_name', '')} {extracted_data.get('last_name', '')}".strip()
                 extracted_email = extracted_data.get("email", "")
                 extracted_skills = extracted_data.get("skills", "")
-                
-                # Debugging Step
-                print(f"DEBUG: Extracted for session: {extracted_name}, {extracted_email}", flush=True)
                 
                 # Store all extracted fields in session for registration form
                 session["resume_data"] = {
@@ -336,15 +399,28 @@ def upload_resume_step():
 @app.route("/register/seeker", methods=["GET", "POST"])
 def register_seeker():
     resume_data = session.get("resume_data", {})
-    # Debugging Step
-    print(f"DEBUG: Session data in register_seeker: {resume_data}", flush=True)
     
     eligibility_questions = EligibilityQuestion.query.filter_by(
         is_active=True
     ).order_by(EligibilityQuestion.display_order).all()
 
     if request.method == "POST":
-        email = request.form["email"].strip().lower()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        if not email or not password:
+            flash("Email and password are required.", "error")
+            return redirect(url_for("register_seeker"))
+
+        if len(password) < 8:
+            flash("Password must be at least 8 characters.", "error")
+            return redirect(url_for("register_seeker"))
+
+        first_name = request.form.get("first_name", "").strip()
+        last_name = request.form.get("last_name", "").strip()
+        if not first_name or not last_name:
+            flash("First name and last name are required.", "error")
+            return redirect(url_for("register_seeker"))
 
         if Seeker.query.filter_by(email=email).first():
             flash("Email already registered.", "error")
@@ -376,26 +452,48 @@ def register_seeker():
             )
             return redirect(url_for("register_seeker"))
 
-        resume_path = resume_data.get("resume_path", "")
+        resume_path = request.form.get("existing_resume") or resume_data.get("resume_path", "")
         
         resume_file = request.files.get("resume")
         if resume_file and resume_file.filename and allowed_file(resume_file.filename, ALLOWED_RESUME):
             fname = secure_filename(f"{uuid.uuid4()}_{resume_file.filename}")
             resume_path = os.path.join(app.config["RESUME_FOLDER"], fname)
             resume_file.save(resume_path)
+        elif resume_file and resume_file.filename:
+            flash("Invalid resume file type. Please upload a PDF, DOC, or DOCX.", "error")
+            return redirect(url_for("register_seeker"))
+
+        if not resume_path:
+            flash("Resume is required. Please upload your resume before submitting.", "error")
+            return redirect(url_for("register_seeker"))
+
+        profile_photo_path = ""
+        photo_file = request.files.get("profile_photo")
+        if photo_file and photo_file.filename and allowed_file(photo_file.filename, ALLOWED_LOGO):
+            fname = secure_filename(f"{uuid.uuid4()}_{photo_file.filename}")
+            photo_path = os.path.join(app.config["LOGO_FOLDER"], fname)
+            photo_file.save(photo_path)
+            profile_photo_path = photo_path.replace("\\", "/").replace("static/", "")
 
         new_seeker = Seeker(
-            first_name=request.form["first_name"],
-            last_name=request.form["last_name"],
+            first_name=first_name,
+            last_name=last_name,
             email=email,
-            password_hash=generate_password_hash(request.form["password"]),
+            password_hash=generate_password_hash(password),
             phone=request.form.get("phone", ""),
             address=request.form.get("address", ""),
             country=request.form.get("country", ""),
+            linkedin=request.form.get("linkedin", ""),
+            portfolio=request.form.get("portfolio", ""),
+            profile_photo_path=profile_photo_path,
             education=request.form.get("education", ""),
+            education_history=request.form.get("education_history", ""),
             experience=request.form.get("experience", ""),
             skills=request.form.get("skills", ""),
+            certifications=request.form.get("certifications", ""),
             resume_path=resume_path,
+            employment_type=request.form.get("employment_type", ""),
+            source=request.form.get("source", ""),
             gender=request.form.get("gender"),
             dob=request.form.get("dob"),
             experience_type=request.form.get("experience_type"),
@@ -407,8 +505,11 @@ def register_seeker():
             availability=request.form.get("availability"),
             is_verified=True,
             age_verified=age_verified,
-            legally_eligible=legally_eligible
+            legally_eligible=legally_eligible,
+            is_published=True,
         )
+        from utils.profile_helpers import update_seeker_completion
+        update_seeker_completion(new_seeker)
         db.session.add(new_seeker)
         db.session.commit()
 
@@ -453,10 +554,24 @@ def register_seeker():
 @app.route("/register/company", methods=["GET", "POST"])
 def register_company():
     if request.method == "POST":
-        email = request.form["email"].strip().lower()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        company_name = request.form.get("company_name", "").strip()
+
+        if not company_name or not email or not password:
+            flash("Company name, email, and password are required.", "error")
+            return redirect(url_for("register_company"))
+
+        if len(password) < 8:
+            flash("Password must be at least 8 characters.", "error")
+            return redirect(url_for("register_company"))
 
         if Company.query.filter_by(email=email).first():
             flash("Email already registered.", "error")
+            return redirect(url_for("register_company"))
+
+        if not request.form.get("age_verified") or not request.form.get("legally_eligible"):
+            flash("Please confirm eligibility requirements.", "error")
             return redirect(url_for("register_company"))
 
         logo_file = request.files.get("logo")
@@ -465,23 +580,31 @@ def register_company():
             fname = secure_filename(f"{uuid.uuid4()}_{logo_file.filename}")
             logo_path = os.path.join(app.config["LOGO_FOLDER"], fname)
             logo_file.save(logo_path)
+            logo_path = logo_path.replace("\\", "/").replace("static/", "")
         else:
             flash("Please upload a valid company logo.", "error")
             return redirect(url_for("register_company"))
 
         new_company = Company(
-            company_name=request.form["company_name"],
+            company_name=company_name,
             email=email,
-            password_hash=generate_password_hash(request.form["password"]),
-            description=request.form.get("description", ""),
+            password_hash=generate_password_hash(password),
+            phone=request.form.get("phone", ""),
+            company_address=request.form.get("company_address", ""),
+            country=request.form.get("country", ""),
             industry=request.form.get("industry", ""),
             website=request.form.get("website", ""),
-            country=request.form.get("country", ""),
+            description=request.form.get("description", ""),
+            linkedin_url=request.form.get("linkedin_url", ""),
             logo_path=logo_path,
             is_verified=True,
-            age_verified=request.form.get("age_verified") == "on",
-            legally_eligible=request.form.get("legally_eligible") == "on"
+            age_verified="age_verified" in request.form,
+            legally_eligible="legally_eligible" in request.form,
+            is_published=True,
+            notification_enabled=True,
         )
+        from utils.profile_helpers import update_company_completion
+        update_company_completion(new_company)
         db.session.add(new_company)
         db.session.commit()
 
@@ -491,13 +614,31 @@ def register_company():
     return render_template("register_company.html")
 
 
+@app.route("/api/profile/autosave", methods=["POST"])
+def autosave_draft():
+    role = request.form.get("role", "seeker")
+    data = {k: v for k, v in request.form.items() if k != "role"}
+    session[f"{role}_draft"] = data
+    session.modified = True
+    return jsonify({
+        "ok": True,
+        "saved_at": datetime.utcnow().strftime("%H:%M"),
+        "completion": len([v for v in data.values() if v and str(v).strip()]),
+    })
+
+
 @app.route("/login/seeker", methods=["GET", "POST"])
 def login_seeker():
+    if request.method == "GET" and session.get("seeker_id"):
+        return redirect(url_for("seeker_dashboard"))
+
     if request.method == "POST":
-        email = request.form["email"].strip().lower()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
         user = Seeker.query.filter_by(email=email).first()
 
-        if user and check_password_hash(user.password_hash, request.form["password"]):
+        if user and safe_check_password(user.password_hash, password):
+            session.clear()
             session["seeker_id"] = user.id
             session["seeker_name"] = user.first_name
             return redirect(url_for("seeker_dashboard"))
@@ -507,11 +648,16 @@ def login_seeker():
 
 @app.route("/login/company", methods=["GET", "POST"])
 def login_company():
+    if request.method == "GET" and session.get("company_id"):
+        return redirect(url_for("company_dashboard"))
+
     if request.method == "POST":
-        email = request.form["email"].strip().lower()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
         co = Company.query.filter_by(email=email).first()
 
-        if co and check_password_hash(co.password_hash, request.form["password"]):
+        if co and safe_check_password(co.password_hash, password):
+            session.clear()
             session["company_id"] = co.id
             session["company_name"] = co.company_name
             return redirect(url_for("company_dashboard"))
@@ -607,7 +753,7 @@ def seeker_dashboard():
             "id":               job.id,
             "title":            job.title,
             "company_name":     job.company.company_name,
-            "logo_path":        job.company.logo_path,
+            "logo_path":        existing_static_path(job.company.logo_path),
             "location":         job.location,
             "job_type":         job.job_type,
             "job_location_type": job.job_location_type,
@@ -775,7 +921,7 @@ def swipe():
     if "seeker_id" not in session:
         return jsonify({"error": "Unauthorized"}), 401
 
-    data      = request.get_json()
+    data      = request.get_json(silent=True) or {}
     job_id    = data.get("job_id")
     direction = data.get("direction")
 
@@ -792,41 +938,49 @@ def swipe():
     if not seeker or not job:
         return jsonify({"error": "Not found"}), 404
 
-    resume_text   = parse_resume(seeker.resume_path) if seeker.resume_path and os.path.exists(seeker.resume_path) else ""
-    job_full_text = f"{job.title} {job.description} {job.required_skills}"
-    m_score = match_resume_to_job(resume_text, job_full_text) if resume_text else 0
-    a_score = calculate_ats_score(resume_text, job_full_text).get("score", 0) if resume_text else 0
+    if direction == "right":
+        application, created = apply_to_job(seeker, job)
+        return jsonify({
+            "status": "ok" if created else "already_swiped",
+            "direction": "right",
+            "match_score": application.match_score or 0,
+        })
 
     new_swipe = JobSwipe(
         seeker_id=session["seeker_id"],
         job_id=job_id,
-        direction=direction,
+        direction="left",
         status="pending",
-        match_score=float(m_score),
-        ats_score=float(a_score),
-        ai_rank_score=float(m_score * 0.7 + a_score * 0.3),
+        match_score=0,
+        ats_score=0,
+        ai_rank_score=0,
     )
     db.session.add(new_swipe)
     db.session.commit()
 
-    if direction == "right" and job.company:
-        send_application_emails(
-            seeker.email,
-            f"{seeker.first_name} {seeker.last_name}",
-            job.company.email,
-            job.company.company_name,
-            job.title,
-            seeker.resume_path,
-        )
-        # ✅ Trigger company notification
-        create_notification(
-            user_id=job.company_id,
-            user_type='company',
-            message=f"New applicant: {seeker.first_name} {seeker.last_name} for '{job.title}'",
-            type='application'
-        )
+    return jsonify({"status": "ok", "direction": "left", "match_score": 0})
 
-    return jsonify({"status": "ok", "direction": direction, "match_score": m_score})
+
+@app.route("/job/<int:job_id>/apply")
+def apply_job(job_id):
+    if "seeker_id" not in session:
+        return redirect(url_for("login_seeker"))
+
+    seeker = db.session.get(Seeker, session["seeker_id"])
+    job = db.session.get(JobListing, job_id)
+    if not seeker:
+        session.clear()
+        return redirect(url_for("login_seeker"))
+    if not job:
+        flash("Job not found.", "error")
+        return redirect(url_for("seeker_dashboard"))
+
+    _, created = apply_to_job(seeker, job)
+    flash(
+        "Application sent successfully!" if created else "You have already applied to this job.",
+        "success" if created else "info",
+    )
+    return redirect(url_for("seeker_dashboard"))
 
 
 @app.route("/profile/seeker", methods=["GET", "POST"])
@@ -884,6 +1038,7 @@ def company_dashboard():
     if not company:
         session.clear()
         return redirect(url_for("login_company"))
+    company.logo_path = existing_static_path(company.logo_path)
 
     jobs = (
         JobListing.query
@@ -902,23 +1057,7 @@ def company_dashboard():
         .all()
     )
 
-    applicants = [
-        {
-            "seeker_id":   sw.seeker.id,
-            "first_name":  sw.seeker.first_name,
-            "last_name":   sw.seeker.last_name,
-            "email":       sw.seeker.email,
-            "skills":      sw.seeker.skills,
-            "resume_path": sw.seeker.resume_path,
-            "job_title":   sw.job_listing.title,
-            "applied_at":  sw.created_at,
-            "status":      sw.status,
-            "swipe_id":    sw.id,
-            "match_score": sw.match_score,
-            "ats_score":   sw.ats_score,
-        }
-        for sw in swipes
-    ]
+    applicants = build_applicant_cards(swipes)
 
     return render_template(
         "company_dashboard.html",
@@ -1104,6 +1243,8 @@ def mark_all_read():
 def health_check():
     return {"status": "healthy", "service": "CareerSwipe"}, 200
 
+
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

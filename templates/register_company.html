@@ -28,6 +28,16 @@
         <label>Country of Operation</label>
         <input type="text" name="country" required placeholder="e.g. Nepal, India, USA, etc.">
       </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Contact number <span class="opt-label">(optional)</span></label>
+          <input type="tel" name="phone" placeholder="+977 98XXXXXXXX">
+        </div>
+        <div class="field">
+          <label>Company address <span class="opt-label">(optional)</span></label>
+          <input type="text" name="company_address" placeholder="Street, City, Country">
+        </div>
+      </div>
       <div class="field">
         <label>Industry type</label>
         <select name="industry">
@@ -51,8 +61,10 @@
         <label>Website URL <span class="opt-label">(optional)</span></label>
         <input type="url" name="website" placeholder="https://yourcompany.com">
       </div>
-
-      
+      <div class="field">
+        <label>LinkedIn <span class="opt-label">(optional)</span></label>
+        <input type="url" name="linkedin_url" placeholder="https://linkedin.com/company/...">
+      </div>
 
       <div class="form-section-label">Company logo</div>
       <div class="field">
@@ -88,6 +100,16 @@
 <script>
 document.getElementById('logo-input').addEventListener('change', function(){
   document.getElementById('logo-name').textContent = this.files[0]?.name || 'No file chosen';
+});
+
+let companyAutosaveTimer = null;
+document.querySelector('.auth-form').addEventListener('input', function() {
+  clearTimeout(companyAutosaveTimer);
+  companyAutosaveTimer = setTimeout(function() {
+    const data = new FormData(document.querySelector('.auth-form'));
+    data.set('role', 'company');
+    fetch('/api/profile/autosave', { method: 'POST', body: data, credentials: 'same-origin' }).catch(function() {});
+  }, 15000);
 });
 
 // Form validation with alerts

@@ -1,5 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Application – CareerSwipe{% endblock %}
+{% block head %}
+<style>
+  /* Wizard step visibility — works even if main.css is cached or fails to load */
+  #application-form > .form-step:not(.active),
+  #application-form > .step-content:not(.active) {
+    display: none !important;
+  }
+  #application-form > .form-step.active,
+  #application-form > .step-content.active {
+    display: block !important;
+  }
+</style>
+{% endblock %}
 {% block content %}
 
 <div class="auth-wrap seeker-theme">
@@ -32,12 +45,15 @@
         <div class="step-label">Review</div>
       </div>
     </div>
+    <div class="wizard-progress-meter" aria-hidden="true">
+      <span id="wizardProgressFill"></span>
+    </div>
 
     <div class="auth-card">
       <form method="POST" enctype="multipart/form-data" class="auth-form" id="application-form" novalidate>
         
         <!-- STEP 2: MY INFORMATION -->
-        <div class="step-content active" id="step-2">
+        <div class="form-step step-content active" id="step-2" data-step="2">
           <div class="auth-header" style="margin: -1.75rem -2rem 1.5rem; border-bottom: 1px solid var(--border);">
             <span class="role-badge badge-seeker">Step 2 of 6</span>
             <h2>My Information</h2>
@@ -73,7 +89,7 @@
 
           <div class="field">
             <label>Country</label>
-            <input type="text" name="country" id="field-country" placeholder="e.g. Nepal, India, USA, etc." value="">
+            <input type="text" name="country" id="field-country" placeholder="e.g. Nepal, India, USA, etc." value="{{ country or '' }}">
           </div>
 
           <div class="field">
@@ -97,14 +113,24 @@
             <input type="text" name="address" id="field-address" required placeholder="City, Country or Street Address" value="{{ address }}">
           </div>
 
+          <div class="field">
+            <label>Profile photo <span class="opt-label">(optional)</span></label>
+            <label class="file-upload-label seeker-upload" for="photo-input">
+              <span class="upload-icon-wrap">📷</span>
+              <span><strong>Upload profile photo</strong> or click to browse<br><small>PNG or JPG</small></span>
+              <span class="file-name-display" id="photo-name">No file chosen</span>
+            </label>
+            <input type="file" name="profile_photo" id="photo-input" accept=".png,.jpg,.jpeg,.webp" style="display:none">
+          </div>
+
           <div class="step-footer">
             <div></div>
-            <button type="button" class="btn btn-primary" onclick="nextStep(3)">Next: Experience →</button>
+            <button type="button" class="btn btn-primary" onclick="nextStep(3)">Next: Experience</button>
           </div>
         </div>
 
         <!-- STEP 3: MY EXPERIENCE -->
-        <div class="step-content" id="step-3">
+        <div class="form-step step-content" id="step-3" data-step="3" hidden>
           <div class="auth-header" style="margin: -1.75rem -2rem 1.5rem; border-bottom: 1px solid var(--border);">
             <span class="role-badge badge-seeker">Step 3 of 6</span>
             <h2>My Experience</h2>
@@ -115,6 +141,10 @@
           <div class="field">
             <label>Highest qualification</label>
             <input type="text" name="education" id="field-education" required placeholder="e.g. B.Sc. Computer Science" value="{{ education }}">
+          </div>
+          <div class="field">
+            <label>Education history <span class="opt-label">(optional)</span></label>
+            <textarea name="education_history" rows="3" placeholder="Schools, degrees, graduation years..."></textarea>
           </div>
 
           <div class="form-section-label">Work History</div>
@@ -140,6 +170,10 @@
             <label>Skills</label>
             <input type="text" name="skills" id="field-skills" required placeholder="Communication, Python, Nursing..." value="{{ skills }}">
           </div>
+          <div class="field">
+            <label>Certifications <span class="opt-label">(optional)</span></label>
+            <textarea name="certifications" rows="2" placeholder="AWS Certified, PMP, etc."></textarea>
+          </div>
 
           <div class="field-row">
             <div class="field">
@@ -153,13 +187,13 @@
           </div>
 
           <div class="step-footer">
-            <button type="button" class="btn btn-outline" onclick="prevStep(2)">← Back</button>
-            <button type="button" class="btn btn-primary" onclick="nextStep(4)">Next: Questions →</button>
+            <button type="button" class="btn btn-outline" onclick="prevStep(2)">Previous</button>
+            <button type="button" class="btn btn-primary" onclick="nextStep(4)">Next: Questions</button>
           </div>
         </div>
 
         <!-- STEP 4: APPLICATION QUESTIONS -->
-        <div class="step-content" id="step-4">
+        <div class="form-step step-content" id="step-4" data-step="4" hidden>
           <div class="auth-header" style="margin: -1.75rem -2rem 1.5rem; border-bottom: 1px solid var(--border);">
             <span class="role-badge badge-seeker">Step 4 of 6</span>
             <h2>Application Questions</h2>
@@ -270,13 +304,13 @@
           </div>
 
           <div class="step-footer">
-            <button type="button" class="btn btn-outline" onclick="prevStep(3)">← Back</button>
-            <button type="button" class="btn btn-primary" onclick="nextStep(5)">Next: Disclosures →</button>
+            <button type="button" class="btn btn-outline" onclick="prevStep(3)">Previous</button>
+            <button type="button" class="btn btn-primary" onclick="nextStep(5)">Next: Disclosures</button>
           </div>
         </div>
 
         <!-- STEP 5: VOLUNTARY DISCLOSURES -->
-        <div class="step-content" id="step-5">
+        <div class="form-step step-content" id="step-5" data-step="5" hidden>
           <div class="auth-header" style="margin: -1.75rem -2rem 1.5rem; border-bottom: 1px solid var(--border);">
             <span class="role-badge badge-seeker">Step 5 of 6</span>
             <h2>Voluntary Disclosures</h2>
@@ -324,17 +358,17 @@
               <a href="{{ resume_url }}" download style="margin-left:0.75rem;">Download PDF</a>
             </div>
             {% endif %}
-            <input type="file" name="resume" accept=".pdf,.doc,.docx" {% if not resume_path %}required{% endif %}>
+            <input type="file" name="resume" accept=".pdf,.doc,.docx" {% if not resume_path %}required{% endif %}{% if resume_path %} data-has-existing="1"{% endif %}>
           </div>
 
           <div class="step-footer">
-            <button type="button" class="btn btn-outline" onclick="prevStep(4)">← Back</button>
-            <button type="button" class="btn btn-primary" onclick="generateReview()">Review Application →</button>
+            <button type="button" class="btn btn-outline" onclick="prevStep(4)">Previous</button>
+            <button type="button" class="btn btn-primary" onclick="generateReview()">Review Application</button>
           </div>
         </div>
 
         <!-- STEP 6: REVIEW -->
-        <div class="step-content" id="step-6">
+        <div class="form-step step-content" id="step-6" data-step="6" hidden>
           <div class="auth-header" style="margin: -1.75rem -2rem 1.5rem; border-bottom: 1px solid var(--border);">
             <span class="role-badge badge-seeker">Step 6 of 6</span>
             <h2>Review Application</h2>
@@ -349,7 +383,7 @@
           <input type="hidden" name="existing_resume" value="{{ resume_path }}">
 
           <div class="step-footer">
-            <button type="button" class="btn btn-outline" onclick="editApplication()">← Edit Application</button>
+            <button type="button" class="btn btn-outline" onclick="editApplication()">Previous</button>
             <button type="submit" class="btn btn-primary">Submit Application & Create Account</button>
           </div>
         </div>
@@ -362,6 +396,12 @@
 
 {% block scripts %}
 <style>
+.form-step {
+  display: none;
+}
+.form-step.active {
+  display: block;
+}
 .field-error {
   color: #ef4444;
   font-size: 0.85rem;
@@ -375,49 +415,66 @@
 let currentStep = 2;
 
 function updateProgressBar(step) {
-  // Reset all steps to default
-  document.querySelectorAll('.step-item').forEach((item, index) => {
-    const stepNum = index + 1;
+  document.querySelectorAll('.step-progress-bar .step-item').forEach(function(item, index) {
+    var stepNum = index + 1;
     item.classList.remove('active', 'completed');
-    
     if (stepNum < step) {
       item.classList.add('completed');
     } else if (stepNum === step) {
       item.classList.add('active');
     }
   });
+  var fill = document.getElementById('wizardProgressFill');
+  if (fill) {
+    fill.style.width = Math.max(0, Math.min(100, ((step - 1) / 5) * 100)) + '%';
+  }
+}
+
+function showStep(step) {
+  document.querySelectorAll('#application-form > .form-step').forEach(function(el) {
+    el.classList.remove('active');
+    el.hidden = true;
+    el.style.display = 'none';
+  });
+  var target = document.getElementById('step-' + step);
+  if (target) {
+    target.classList.add('active');
+    target.hidden = false;
+    target.style.display = '';
+  }
+  currentStep = step;
+  updateProgressBar(step);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function createErrorElement(message) {
-  const error = document.createElement('div');
+  var error = document.createElement('div');
   error.className = 'field-error';
   error.textContent = message;
   return error;
 }
 
 function clearFieldError(field) {
-  const parent = field.closest('.field') || field.parentElement;
-  const existing = parent.querySelector('.field-error');
-  if (existing) {
-    existing.remove();
-  }
-  if (field.type !== 'checkbox') {
-    field.style.borderColor = 'var(--border)';
+  var parent = field.closest('.field') || field.parentElement;
+  var existing = parent.querySelector('.field-error');
+  if (existing) existing.remove();
+  if (field.type !== 'checkbox' && field.type !== 'radio') {
+    field.style.borderColor = '';
   } else {
-    parent.style.color = 'inherit';
+    parent.style.color = '';
   }
 }
 
 function markFieldInvalid(field, message) {
-  const parent = field.closest('.field') || field.parentElement;
-  let error = parent.querySelector('.field-error');
+  var parent = field.closest('.field') || field.parentElement;
+  var error = parent.querySelector('.field-error');
   if (!error) {
     error = createErrorElement(message);
     parent.appendChild(error);
   } else {
     error.textContent = message;
   }
-  if (field.type === 'checkbox') {
+  if (field.type === 'checkbox' || field.type === 'radio') {
     parent.style.color = '#ef4444';
   } else {
     field.style.borderColor = '#ef4444';
@@ -425,29 +482,44 @@ function markFieldInvalid(field, message) {
 }
 
 function validateCurrentStep() {
-  const activeContent = document.querySelector('.step-content.active');
-  const requiredFields = activeContent.querySelectorAll('[required]');
-  let valid = true;
+  var activeContent = document.querySelector('.form-step.active');
+  if (!activeContent) return false;
 
-  requiredFields.forEach(field => {
+  var valid = true;
+  var checkedRadioGroups = {};
+
+  activeContent.querySelectorAll('[required]').forEach(function(field) {
     clearFieldError(field);
-    if (field.type === 'checkbox') {
+
+    if (field.type === 'radio') {
+      if (!checkedRadioGroups[field.name]) {
+        checkedRadioGroups[field.name] = activeContent.querySelector('input[name="' + field.name + '"]:checked');
+      }
+      if (!checkedRadioGroups[field.name]) {
+        markFieldInvalid(field, 'Please select an option.');
+        valid = false;
+      }
+    } else if (field.type === 'checkbox') {
       if (!field.checked) {
         markFieldInvalid(field, 'This field is required.');
         valid = false;
       }
-    } else {
-      if (!field.value || !field.checkValidity()) {
-        const label = field.closest('.field')?.querySelector('label')?.innerText || field.name;
-        const cleanLabel = label.replace('*', '').trim() || 'This field';
-        markFieldInvalid(field, `${cleanLabel} is required.`);
+    } else if (field.type === 'file') {
+      if (!field.files.length && !field.dataset.hasExisting) {
+        markFieldInvalid(field, 'Please upload a file.');
         valid = false;
       }
+    } else if (!field.value || !field.checkValidity()) {
+      var labelEl = field.closest('.field');
+      labelEl = labelEl ? labelEl.querySelector('label') : null;
+      var cleanLabel = labelEl ? labelEl.innerText.replace('*', '').trim() : 'This field';
+      markFieldInvalid(field, cleanLabel + ' is required.');
+      valid = false;
     }
   });
 
   if (!valid) {
-    const firstError = document.querySelector('.step-content.active .field-error');
+    var firstError = activeContent.querySelector('.field-error');
     if (firstError) {
       firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -456,24 +528,12 @@ function validateCurrentStep() {
 }
 
 function nextStep(step) {
-  if (!validateCurrentStep()) {
-    return;
-  }
-
-  const activeContent = document.querySelector('.step-content.active');
-  activeContent.classList.remove('active');
-  document.getElementById(`step-${step}`).classList.add('active');
-  currentStep = step;
-  updateProgressBar(step);
-  window.scrollTo(0, 0);
+  if (!validateCurrentStep()) return;
+  showStep(step);
 }
 
 function prevStep(step) {
-  document.querySelector('.step-content.active').classList.remove('active');
-  document.getElementById(`step-${step}`).classList.add('active');
-  currentStep = step;
-  updateProgressBar(step);
-  window.scrollTo(0, 0);
+  showStep(step);
 }
 
 function editApplication() {
@@ -481,29 +541,27 @@ function editApplication() {
 }
 
 function generateReview() {
-  if (!validateCurrentStep()) {
-    return;
-  }
+  if (!validateCurrentStep()) return;
 
-  const form = document.getElementById('application-form');
-  const formData = new FormData(form);
-  const container = document.getElementById('review-container');
-  
-  const eligibilityAnswers = [];
-  const questionNames = new Set(Array.from(formData.keys()).filter(key => key.startsWith('question_')));
-  questionNames.forEach(name => {
-    const field = form.querySelector(`[name="${name}"]`);
-    const questionLabel = field?.closest('.field')?.querySelector('label')?.innerText || name;
+  var form = document.getElementById('application-form');
+  var formData = new FormData(form);
+  var container = document.getElementById('review-container');
+
+  var eligibilityAnswers = [];
+  Array.from(formData.keys()).filter(function(key) { return key.indexOf('question_') === 0; }).forEach(function(name) {
+    var field = form.querySelector('[name="' + name + '"]');
+    var questionLabel = field && field.closest('.field') ? field.closest('.field').querySelector('label') : null;
     eligibilityAnswers.push({
-      question: questionLabel.replace('*', '').trim(),
-      answer: formData.get(name) || 'No answer',
+      question: questionLabel ? questionLabel.innerText.replace('*', '').trim() : name,
+      answer: formData.get(name) || 'No answer'
     });
   });
 
-  const resumeFile = formData.get('resume');
-  const resumeLabel = resumeFile && resumeFile.name ? resumeFile.name : (formData.get('existing_resume') ? formData.get('existing_resume').split('/').pop() : 'No resume uploaded');
+  var resumeFile = formData.get('resume');
+  var resumeLabel = resumeFile && resumeFile.name ? resumeFile.name
+    : (formData.get('existing_resume') ? formData.get('existing_resume').split('/').pop() : 'No resume uploaded');
 
-  let html = `
+  container.innerHTML = `
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
       <div>
         <h4 style="color:var(--primary); margin-bottom: 0.5rem; font-size: 12px; text-transform: uppercase;">Personal Information</h4>
@@ -533,24 +591,37 @@ function generateReview() {
     </div>
     <div style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
        <h4 style="color:var(--primary); margin-bottom: 0.5rem; font-size: 12px; text-transform: uppercase;">Eligibility Questions</h4>
-       ${eligibilityAnswers.length ? '<ul style="padding-left: 1rem;">' + eligibilityAnswers.map(item => `<li><strong>${item.question}</strong>: ${item.answer}</li>`).join('') + '</ul>' : '<p>No eligibility answers provided.</p>'}
-    </div>
-  `;
-  
-  container.innerHTML = html;
-  nextStep(6);
+       ${eligibilityAnswers.length ? '<ul style="padding-left: 1rem;">' + eligibilityAnswers.map(function(item) { return '<li><strong>' + item.question + '</strong>: ' + item.answer + '</li>'; }).join('') + '</ul>' : '<p>No eligibility answers provided.</p>'}
+    </div>`;
+
+  showStep(6);
 }
 
-// Bug Fix: Mapping verification on load
-window.addEventListener('DOMContentLoaded', () => {
-  const firstName = document.getElementById('field-first-name').value;
-  const lastName = document.getElementById('field-last-name').value;
-  const email = document.getElementById('field-email').value;
-  
-  console.log("Autofill Check:", { firstName, lastName, email });
-  
-  // If resume was skipped, we are on Step 2.
-  // If resume was uploaded, session data is already in values via Jinja2.
+window.addEventListener('DOMContentLoaded', function() {
+  showStep(currentStep);
+
+  var resumeInput = document.querySelector('input[name="resume"]');
+  if (resumeInput && document.querySelector('input[name="existing_resume"]')) {
+    resumeInput.dataset.hasExisting = '1';
+  }
+
+  var photoInput = document.getElementById('photo-input');
+  if (photoInput) {
+    photoInput.addEventListener('change', function() {
+      document.getElementById('photo-name').textContent = this.files[0] ? this.files[0].name : 'No file chosen';
+    });
+  }
+
+  var autosaveTimer = null;
+  var form = document.getElementById('application-form');
+  form.addEventListener('input', function() {
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(function() {
+      var data = new FormData(form);
+      data.set('role', 'seeker');
+      fetch('/api/profile/autosave', { method: 'POST', body: data, credentials: 'same-origin' }).catch(function() {});
+    }, 15000);
+  });
 });
 </script>
 {% endblock %}

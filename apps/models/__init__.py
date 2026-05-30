@@ -1,9 +1,4 @@
-"""
-app/models/__init__.py – Re-exports all models for convenient imports.
-Usage: from app.models import Seeker, Company, JobListing, JobSwipe, Notification, etc.
-"""
-
-from models import Seeker, Company, JobListing, JobSwipe
+from models import Seeker, Company, JobListing, JobSwipe, UploadedResume, RecommendationHistory, SavedJob, RecentlyViewedJob
 from .notification import Notification
 from .eligibility_question import EligibilityQuestion
 from .eligibility_answer import EligibilityAnswer
@@ -14,5 +9,7 @@ from .notification_preference import NotificationPreference
 __all__ = [
     'Seeker', 'Company', 'JobListing', 'JobSwipe', 'Notification',
     'EligibilityQuestion', 'EligibilityAnswer', 'JobRequirements',
-    'InterviewInvite', 'NotificationPreference'
+    'InterviewInvite', 'NotificationPreference',
+    'UploadedResume', 'RecommendationHistory', 'SavedJob', 'RecentlyViewedJob'
 ]
+

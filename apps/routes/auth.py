@@ -3,6 +3,7 @@ app/routes/auth.py – Authentication routes.
 Covers: home, resume upload, seeker/company registration & login, logout.
 """
 
+import json
 import os
 import uuid
 
@@ -18,11 +19,14 @@ from ..models import Seeker, Company, EligibilityQuestion
 from ..services import EligibilityService
 from utils.helpers import allowed_file
 from utils.resume_parser import process_resume
+from utils.profile_helpers import update_seeker_completion, update_company_completion
 
 auth_bp = Blueprint('auth', __name__)
 
-ALLOWED_RESUME = {'pdf', 'doc', 'docx'}
+ALLOWED_RESUME = {'pdf', 'doc', 'docx', 'txt'}
 ALLOWED_LOGO   = {'png', 'jpg', 'jpeg', 'webp'}
+ALLOWED_PHOTO  = {'png', 'jpg', 'jpeg', 'webp'}
+ALLOWED_DOC    = {'pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg'}
 
 
 def normalize_file_path(file_path):
@@ -30,6 +34,16 @@ def normalize_file_path(file_path):
     if not file_path:
         return ''
     return file_path.replace('\\', '/').replace('static/', '')
+
+
+def safe_check_password(password_hash, password):
+    """Reject invalid credentials without crashing on malformed legacy hashes."""
+    if not password_hash or not password:
+        return False
+    try:
+        return check_password_hash(password_hash, password)
+    except (TypeError, ValueError):
+        return False
 
 
 # ── Home ──────────────────────────────────────────────────────────────────────
@@ -64,8 +78,6 @@ def upload_resume_step():
 
         if extracted:
             full_name = f"{extracted.get('first_name', '')} {extracted.get('last_name', '')}".strip()
-            print(f'DEBUG resume extracted: {full_name} / {extracted.get("email")}', flush=True)
-
             session['resume_data'] = {
                 'name':            full_name,
                 'first_name':      extracted.get('first_name', ''),
@@ -104,8 +116,6 @@ def register_seeker():
     from flask import current_app
 
     resume_data = session.get('resume_data', {})
-    print(f'DEBUG session resume_data: {resume_data}', flush=True)
-
     eligibility_questions = EligibilityQuestion.query.filter_by(
         is_active=True
     ).order_by(EligibilityQuestion.display_order).all()
@@ -148,8 +158,11 @@ def register_seeker():
             )
             return redirect(url_for('auth.register_seeker'))
 
-        # Allow resume replacement at registration step
-        resume_path = resume_data.get('resume_path', '')
+        if not request.form.get('age_verified') or not request.form.get('legally_eligible'):
+            flash('Please confirm eligibility requirements.', 'error')
+            return redirect(url_for('auth.register_seeker'))
+
+        resume_path = request.form.get('existing_resume') or resume_data.get('resume_path', '')
         resume_file = request.files.get('resume')
         if resume_file and resume_file.filename:
             if not allowed_file(resume_file.filename, ALLOWED_RESUME):
@@ -166,28 +179,48 @@ def register_seeker():
             flash('Resume is required. Please upload your resume before submitting.', 'error')
             return redirect(url_for('auth.register_seeker'))
 
+        profile_photo_path = ''
+        photo_file = request.files.get('profile_photo')
+        if photo_file and photo_file.filename and allowed_file(photo_file.filename, ALLOWED_PHOTO):
+            fname = secure_filename(f'{uuid.uuid4()}_{photo_file.filename}')
+            photo_path = os.path.join(current_app.config['LOGO_FOLDER'], fname)
+            photo_file.save(photo_path)
+            profile_photo_path = normalize_file_path(photo_path)
+
         seeker = Seeker(
-            first_name        = request.form['first_name'],
-            last_name         = request.form['last_name'],
-            email             = email,
-            password_hash     = generate_password_hash(request.form['password']),
-            phone             = request.form.get('phone', ''),
-            address           = request.form.get('address', ''),
-            education         = request.form.get('education', ''),
-            experience        = request.form.get('experience', ''),
-            skills            = request.form.get('skills', ''),
-            resume_path       = resume_path,
-            gender            = request.form.get('gender'),
-            dob               = request.form.get('dob'),
-            experience_type   = request.form.get('experience_type'),
-            career_field      = request.form.get('career_field'),
-            job_status        = request.form.get('job_status', 'Searching'),
-            job_location_type = request.form.get('job_location_type'),
-            desired_roles     = request.form.get('desired_roles'),
-            salary_expectation= request.form.get('salary'),
-            availability      = request.form.get('availability'),
-            is_verified       = True,
+            first_name         = request.form['first_name'],
+            last_name          = request.form['last_name'],
+            email              = email,
+            password_hash      = generate_password_hash(request.form['password']),
+            phone              = request.form.get('phone', ''),
+            address            = request.form.get('address', ''),
+            country            = request.form.get('country', ''),
+            linkedin           = request.form.get('linkedin', ''),
+            portfolio          = request.form.get('portfolio', ''),
+            profile_photo_path = profile_photo_path,
+            education          = request.form.get('education', ''),
+            education_history  = request.form.get('education_history', ''),
+            experience         = request.form.get('experience', ''),
+            skills             = request.form.get('skills', ''),
+            certifications     = request.form.get('certifications', ''),
+            resume_path        = normalize_file_path(resume_path),
+            employment_type    = request.form.get('employment_type', ''),
+            source             = request.form.get('source', ''),
+            gender             = request.form.get('gender'),
+            dob                = request.form.get('dob'),
+            experience_type    = request.form.get('experience_type'),
+            career_field       = request.form.get('career_field'),
+            job_status         = request.form.get('job_status', 'Searching'),
+            job_location_type  = request.form.get('job_location_type'),
+            desired_roles      = request.form.get('desired_roles'),
+            salary_expectation = request.form.get('salary'),
+            availability       = request.form.get('availability'),
+            age_verified       = 'age_verified' in request.form,
+            legally_eligible   = 'legally_eligible' in request.form,
+            is_verified        = True,
+            is_published       = True,
         )
+        update_seeker_completion(seeker)
         db.session.add(seeker)
         db.session.commit()
         session.pop('resume_data', None)
@@ -203,6 +236,7 @@ def register_seeker():
         email            = resume_data.get('email'),
         phone            = resume_data.get('phone'),
         address          = resume_data.get('address'),
+        country          = resume_data.get('country'),
         gender           = resume_data.get('gender'),
         dob              = resume_data.get('dob'),
         education        = resume_data.get('education'),
@@ -227,104 +261,70 @@ def register_company():
 
     if request.method == 'POST':
         email = request.form['email'].strip().lower()
+        password = request.form.get('password', '')
+
+        if len(password) < 8:
+            flash('Password must be at least 8 characters.', 'error')
+            return redirect(url_for('auth.register_company'))
 
         if Company.query.filter_by(email=email).first():
             flash('Email already registered.', 'error')
             return redirect(url_for('auth.register_company'))
 
-        # Validate passwords match
-        password = request.form.get('password', '')
-        confirm_password = request.form.get('confirm_password', '')
-        if password != confirm_password:
-            flash('Passwords do not match.', 'error')
+        if not request.form.get('age_verified') or not request.form.get('legally_eligible'):
+            flash('Please confirm eligibility requirements.', 'error')
             return redirect(url_for('auth.register_company'))
 
-        # Handle logo upload (REQUIRED)
-        logo_path = ''
         logo_file = request.files.get('logo')
         if not logo_file or not logo_file.filename:
             flash('Company logo is required.', 'error')
             return redirect(url_for('auth.register_company'))
-        
+
         if not allowed_file(logo_file.filename, ALLOWED_LOGO):
-            flash('Invalid logo format. Please upload a PNG or JPG file.', 'error')
+            flash('Invalid logo format. Please upload PNG, JPG, or WEBP.', 'error')
             return redirect(url_for('auth.register_company'))
-            
-        fname     = secure_filename(f'{uuid.uuid4()}_{logo_file.filename}')
+
+        fname = secure_filename(f'{uuid.uuid4()}_{logo_file.filename}')
         logo_full_path = os.path.join(current_app.config['LOGO_FOLDER'], fname)
         logo_file.save(logo_full_path)
-        # Store relative path for web serving (uploads/logos/filename)
         logo_path = normalize_file_path(logo_full_path)
 
-        # Handle banner upload
-        banner_path = ''
-        banner_file = request.files.get('banner')
-        if banner_file and banner_file.filename and allowed_file(banner_file.filename, ALLOWED_LOGO):
-            fname       = secure_filename(f'{uuid.uuid4()}_{banner_file.filename}')
-            banner_full_path = os.path.join(current_app.config['LOGO_FOLDER'], fname)
-            banner_file.save(banner_full_path)
-            banner_path = normalize_file_path(banner_full_path)
-
-        # Handle verification document upload
         verification_doc = ''
         verification_file = request.files.get('verification_document')
-        if verification_file and verification_file.filename:
-            fname            = secure_filename(f'{uuid.uuid4()}_{verification_file.filename}')
-            verification_full_path = os.path.join(current_app.config['UPLOAD_FOLDER'], fname)
-            verification_file.save(verification_full_path)
-            verification_doc = normalize_file_path(verification_full_path)
+        if verification_file and verification_file.filename and allowed_file(verification_file.filename, ALLOWED_DOC):
+            vfname = secure_filename(f'{uuid.uuid4()}_{verification_file.filename}')
+            vpath = os.path.join(current_app.config['UPLOAD_FOLDER'], vfname)
+            verification_file.save(vpath)
+            verification_doc = normalize_file_path(vpath)
 
-        # Create company with all fields
         company = Company(
-            # Basic Information
             company_name     = request.form.get('company_name', ''),
             email            = email,
             password_hash    = generate_password_hash(password),
             phone            = request.form.get('phone', ''),
-            hr_name          = request.form.get('hr_name', ''),
-            
-            # Company details
-            company_type     = request.form.get('company_type', ''),
+            company_address  = request.form.get('company_address', ''),
+            country          = request.form.get('country', ''),
             industry         = request.form.get('industry', ''),
             company_size     = request.form.get('company_size', ''),
-            founded_year     = request.form.get('founded_year', type=int) if request.form.get('founded_year') else None,
-            headquarters     = request.form.get('headquarters', ''),
-            country          = request.form.get('country', ''),
             website          = request.form.get('website', ''),
-            
-            # Description sections
             description      = request.form.get('description', ''),
             mission          = request.form.get('mission', ''),
-            vision           = request.form.get('vision', ''),
             culture          = request.form.get('culture', ''),
             perks            = request.form.get('perks', ''),
-            
-            # Hiring information
-            hiring_frequency = request.form.get('hiring_frequency', ''),
-            remote_hiring    = 'remote_hiring' in request.form,
-            international_hiring = 'international_hiring' in request.form,
-            preferred_locations = request.form.get('preferred_locations', ''),
-            
-            # Media
-            logo_path        = logo_path,
-            banner_path      = banner_path,
-            verification_document = verification_doc,
-            
-            # Social links
+            work_mode        = request.form.get('work_mode', ''),
+            open_positions   = request.form.get('open_positions', ''),
+            hiring_categories= request.form.get('hiring_categories', ''),
             linkedin_url     = request.form.get('linkedin_url', ''),
-            facebook_url     = request.form.get('facebook_url', ''),
-            instagram_url    = request.form.get('instagram_url', ''),
-            twitter_url      = request.form.get('twitter_url', ''),
-            youtube_url      = request.form.get('youtube_url', ''),
-            
-            # Status
-            profile_completion = 100,
+            business_registration = request.form.get('business_registration', ''),
+            logo_path        = logo_path,
+            verification_document = verification_doc,
             is_verified      = True,
             age_verified     = 'age_verified' in request.form,
             legally_eligible = 'legally_eligible' in request.form,
+            is_published     = True,
             notification_enabled = True,
         )
-        
+        update_company_completion(company)
         db.session.add(company)
         db.session.commit()
 
@@ -341,7 +341,7 @@ def login_seeker():
         email = request.form['email'].strip().lower()
         user  = Seeker.query.filter_by(email=email).first()
 
-        if user and check_password_hash(user.password_hash, request.form['password']):
+        if user and safe_check_password(user.password_hash, request.form.get('password', '')):
             session['seeker_id']   = user.id
             session['seeker_name'] = user.first_name
             return redirect(url_for('seeker.seeker_dashboard'))
@@ -357,7 +357,7 @@ def login_company():
         email = request.form['email'].strip().lower()
         co    = Company.query.filter_by(email=email).first()
 
-        if co and check_password_hash(co.password_hash, request.form['password']):
+        if co and safe_check_password(co.password_hash, request.form.get('password', '')):
             session['company_id']   = co.id
             session['company_name'] = co.company_name
             return redirect(url_for('company.company_dashboard'))
