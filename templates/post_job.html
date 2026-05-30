@@ -47,6 +47,7 @@
 
       <div class="auth-card glass" style="max-width: 100%; margin: 0;">
         <form method="POST" class="auth-form">
+          {{ csrf_token() }}
           <div class="form-section-label">Job Basics</div>
           <div class="field">
             <label>Job title</label>

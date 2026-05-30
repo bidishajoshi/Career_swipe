@@ -42,6 +42,7 @@
 
       <div class="auth-form">
         <form method="POST" enctype="multipart/form-data" id="upload-form">
+          {{ csrf_token() }}
           <div class="field" id="drop-zone-container">
             <label class="file-upload-label seeker-upload" for="resume-input" id="drop-zone" style="padding: 3rem 1rem; border-style: dashed; cursor: pointer; flex-direction: column;">
               <div style="font-size: 2.5rem; margin-bottom: 1rem;">📄</div>

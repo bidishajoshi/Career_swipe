@@ -33,6 +33,7 @@
     </div>
 
     <form method="POST" enctype="multipart/form-data" class="profile-form" id="companyProfileForm">
+      {{ csrf_token() }}
 
       <!-- ════════════════════════════════════════════════════════════ -->
       <!-- TAB 1: BASIC INFORMATION -->
@@ -364,6 +365,7 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" id="cancelDelete">Cancel</button>
       <form method="POST" action="{{ url_for('company.delete_account') }}" style="display: inline;">
+        {{ csrf_token() }}
         <button type="submit" class="btn btn-danger">Yes, Delete My Account</button>
       </form>
     </div>

@@ -8,6 +8,7 @@
       <p>Post jobs and discover top talent</p>
     </div>
     <form method="POST" enctype="multipart/form-data" class="auth-form">
+      {{ csrf_token() }}
 
       <div class="form-section-label">Company identity</div>
       <div class="field">
