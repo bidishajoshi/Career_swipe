@@ -51,7 +51,7 @@
 
     <div class="auth-card">
       <form method="POST" enctype="multipart/form-data" class="auth-form" id="application-form" novalidate>
-        {{ csrf_token() }}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         
         <!-- STEP 2: MY INFORMATION -->
         <div class="form-step step-content active" id="step-2" data-step="2">

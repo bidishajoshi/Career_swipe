@@ -72,7 +72,7 @@
                     <p class="text-muted mb-4">Please answer the following questions to complete your application.</p>
 
                     <form id="eligibility-form" method="POST">
-                        {{ csrf_token() }}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div id="questions-container"></div>
 
                         <div class="alert alert-info" id="validation-messages" style="display: none;"></div>
