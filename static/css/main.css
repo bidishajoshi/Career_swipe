@@ -176,6 +176,7 @@ a {
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
   padding: 0 2rem;
+  padding-left: 0;
   height: 66px;
   display: flex;
   align-items: center;
@@ -198,7 +199,7 @@ body.light-mode .navbar {
   text-decoration: none;
   letter-spacing: -2px;
   flex-shrink: 0;
-}
+  margin :0px;}
 
 .nav-logo span {
   color: var(--primary);
