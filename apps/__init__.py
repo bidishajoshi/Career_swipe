@@ -13,6 +13,8 @@ try:
 except ImportError:
     CSRFProtect = None
 
+csrf = CSRFProtect() if CSRFProtect else None
+
 from .extensions import db, migrate, mail
 from .config import Config
 from .services import EligibilityService
@@ -40,8 +42,8 @@ def create_app(config_class=Config):
     db.init_app(app)
     migrate.init_app(app, db)
     mail.init_app(app)
-    if CSRFProtect:
-        CSRFProtect(app)  # Enable CSRF protection for all forms
+    if csrf:
+        csrf.init_app(app)  # Enable CSRF protection for all forms
 
     # Ensure upload directories exist
     with app.app_context():
@@ -60,6 +62,17 @@ def create_app(config_class=Config):
     app.register_blueprint(jobs_bp)
     app.register_blueprint(notifications_bp)
     app.register_blueprint(profile_bp)
+
+    if csrf:
+        for rule in app.url_map.iter_rules():
+            if rule.rule.startswith('/api/'):
+                view_func = app.view_functions.get(rule.endpoint)
+                if view_func:
+                    csrf.exempt(view_func)
+
+    @app.route("/api/health")
+    def health_check():
+        return {"status": "healthy", "service": "CareerSwipe"}, 200
 
     # Legacy templates still reference the original monolithic app endpoint names.
     # These aliases keep url_for(...) working while the blueprint routes handle requests.
