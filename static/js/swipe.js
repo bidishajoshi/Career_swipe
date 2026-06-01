@@ -155,9 +155,13 @@
   }
 
   function fetchSwipe(jobId, direction) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     return fetch('/swipe', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+      },
       body: JSON.stringify({ job_id: jobId, direction: direction }),
     }).then(async response => {
       const data = await response.json().catch(() => ({}));
