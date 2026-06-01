@@ -115,14 +115,15 @@ def update_applicant(swipe_id, action):
     job    = swipe.job_listing
     positions_needed = getattr(job, 'number_of_positions', None) or getattr(job, 'number_of_vacancies', None) or 1
 
-    # Send status-update email to seeker
-    send_status_update_email(
-        seeker_email=seeker.email,
-        seeker_name=seeker.first_name,
-        job_title=job.title,
-        company_name=job.company.company_name,
-        action_text=action_text,
-    )
+    # Send status-update email to seeker (accepted/rejected only)
+    if action_text in ('accepted', 'rejected'):
+        send_status_update_email(
+            seeker_email=seeker.email,
+            seeker_name=seeker.first_name,
+            job_title=job.title,
+            company_name=job.company.company_name,
+            new_status=action_text,
+        )
 
     # Build a meaningful in-app notification
     if action == 'accept':

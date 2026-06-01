@@ -348,20 +348,20 @@ def send_application_emails(seeker_email: str, seeker_name: str, company_email: 
     )
 
 
-def send_status_update_email(company_email: str, company_name: str, seeker_name: str, job_title: str, new_status: str) -> None:
-    """Send status update email to company or seeker based on new_status.
+def send_status_update_email(seeker_email: str, seeker_name: str, job_title: str, company_name: str, new_status: str) -> None:
+    """Send status update email to seeker based on new_status.
     new_status should be 'accepted' or 'rejected'.
     """
     if new_status == 'accepted':
         EmailService.send_application_accepted(
-            seeker_email=company_email,
+            seeker_email=seeker_email,
             seeker_name=seeker_name,
             job_title=job_title,
             company_name=company_name,
         )
-    else:
+    elif new_status == 'rejected':
         EmailService.send_application_rejected(
-            seeker_email=company_email,
+            seeker_email=seeker_email,
             seeker_name=seeker_name,
             job_title=job_title,
             company_name=company_name,
