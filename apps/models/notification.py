@@ -50,6 +50,9 @@ class Notification(db.Model):
             'title':                 self.title,
             'message':               self.message,
             'notification_type':     self.notification_type,
+            'type':                  self.notification_type,
+            'user_id':               self.recipient_id,
+            'user_type':             self.recipient_type,
             'is_read':               self.is_read,
             'is_deleted':            self.is_deleted,
             'is_archived':           self.is_archived,
@@ -60,6 +63,18 @@ class Notification(db.Model):
             'created_at':            self.created_at.isoformat() if self.created_at else None,
             'read_at':               self.read_at.isoformat() if self.read_at else None,
         }
+
+    @property
+    def type(self):
+        return self.notification_type
+
+    @property
+    def user_id(self):
+        return self.recipient_id
+
+    @property
+    def user_type(self):
+        return self.recipient_type
     
     def mark_as_read(self):
         """Mark notification as read"""

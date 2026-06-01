@@ -7,7 +7,6 @@ from flask import Blueprint, render_template, redirect, url_for, session, jsonif
 from datetime import datetime
 from ..extensions import db
 from ..models import Notification, NotificationPreference
-from models import Notification as OldNotification
 from ..services import NotificationService
 
 notifications_bp = Blueprint('notifications', __name__)
@@ -37,11 +36,18 @@ def notifications_history():
     per_page = 20
     offset = (page - 1) * per_page
 
-    notifications = OldNotification.query.filter_by(
-        user_id=user_id, user_type=user_type
-    ).order_by(OldNotification.created_at.desc()).limit(per_page).offset(offset).all()
+    notifications = Notification.query.filter_by(
+        recipient_id=user_id,
+        recipient_type=user_type,
+        is_deleted=False,
+    ).order_by(Notification.created_at.desc()).limit(per_page).offset(offset).all()
 
-    unread_count = OldNotification.query.filter_by(user_id=user_id, user_type=user_type, is_read=False).count()
+    unread_count = Notification.query.filter_by(
+        recipient_id=user_id,
+        recipient_type=user_type,
+        is_read=False,
+        is_deleted=False,
+    ).count()
     
     return render_template(
         'notifications.html',
@@ -85,11 +91,15 @@ def api_get_notifications():
 
     offset = (page - 1) * limit
 
-    query = OldNotification.query.filter_by(user_id=user_id, user_type=user_type)
+    query = Notification.query.filter_by(
+        recipient_id=user_id,
+        recipient_type=user_type,
+        is_deleted=False,
+    )
     if unread_only:
         query = query.filter_by(is_read=False)
-    
-    notifications = query.order_by(OldNotification.created_at.desc()).limit(limit).offset(offset).all()
+
+    notifications = query.order_by(Notification.created_at.desc()).limit(limit).offset(offset).all()
 
     return jsonify({
         'success': True,
@@ -106,7 +116,12 @@ def api_unread_count():
     if not user_id:
         return jsonify({'error': 'Unauthorized'}), 401
 
-    count = OldNotification.query.filter_by(user_id=user_id, user_type=user_type, is_read=False).count()
+    count = Notification.query.filter_by(
+        recipient_id=user_id,
+        recipient_type=user_type,
+        is_read=False,
+        is_deleted=False,
+    ).count()
 
     return jsonify({
         'success': True,
@@ -115,6 +130,7 @@ def api_unread_count():
 
 
 @notifications_bp.route('/api/notifications/<int:notification_id>/mark-read', methods=['POST'])
+@notifications_bp.route('/api/notifications/read/<int:notification_id>', methods=['POST'])
 def api_mark_read(notification_id):
     """Mark a notification as read"""
     user_id, user_type = _current_user()
@@ -122,11 +138,11 @@ def api_mark_read(notification_id):
         return jsonify({'error': 'Unauthorized'}), 401
 
     # Verify ownership
-    notification = OldNotification.query.get(notification_id)
-    if not notification or notification.user_id != user_id or notification.user_type != user_type:
+    notification = Notification.query.get(notification_id)
+    if not notification or notification.recipient_id != user_id or notification.recipient_type != user_type:
         return jsonify({'error': 'Notification not found'}), 404
 
-    notification.is_read = True
+    notification.mark_as_read()
     db.session.commit()
     return jsonify({
         'success': True,
@@ -135,15 +151,19 @@ def api_mark_read(notification_id):
 
 
 @notifications_bp.route('/api/notifications/mark-all-read', methods=['POST'])
+@notifications_bp.route('/api/notifications/read-all', methods=['POST'])
 def api_mark_all_read():
     """Mark all unread notifications as read"""
     user_id, user_type = _current_user()
     if not user_id:
         return jsonify({'error': 'Unauthorized'}), 401
 
-    OldNotification.query.filter_by(
-        user_id=user_id, user_type=user_type, is_read=False
-    ).update({'is_read': True})
+    Notification.query.filter_by(
+        recipient_id=user_id,
+        recipient_type=user_type,
+        is_read=False,
+        is_deleted=False,
+    ).update({'is_read': True, 'read_at': datetime.utcnow()})
     db.session.commit()
     return jsonify({
         'success': True,
@@ -158,11 +178,11 @@ def api_archive_notification(notification_id):
     if not user_id:
         return jsonify({'error': 'Unauthorized'}), 401
 
-    notification = OldNotification.query.get(notification_id)
-    if not notification or notification.user_id != user_id or notification.user_type != user_type:
+    notification = Notification.query.get(notification_id)
+    if not notification or notification.recipient_id != user_id or notification.recipient_type != user_type:
         return jsonify({'error': 'Notification not found'}), 404
 
-    db.session.delete(notification)
+    notification.archive()
     db.session.commit()
     return jsonify({
         'success': True,
@@ -178,11 +198,11 @@ def api_delete_notification(notification_id):
         return jsonify({'error': 'Unauthorized'}), 401
 
     # Verify ownership
-    notification = OldNotification.query.get(notification_id)
-    if not notification or notification.user_id != user_id or notification.user_type != user_type:
+    notification = Notification.query.get(notification_id)
+    if not notification or notification.recipient_id != user_id or notification.recipient_type != user_type:
         return jsonify({'error': 'Notification not found'}), 404
 
-    db.session.delete(notification)
+    notification.is_deleted = True
     db.session.commit()
     return jsonify({
         'success': True,
