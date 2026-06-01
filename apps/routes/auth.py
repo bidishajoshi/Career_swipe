@@ -129,6 +129,11 @@ def register_seeker():
     if request.method == 'POST':
         email = request.form['email'].strip().lower()
 
+        password = request.form.get('password', '')
+        if len(password) < 8:
+            flash('Password must be at least 8 characters.', 'error')
+            return redirect(url_for('auth.register_seeker'))
+
         if Seeker.query.filter_by(email=email).first():
             flash('Email already registered.', 'error')
             return redirect(url_for('auth.register_seeker'))
@@ -160,6 +165,10 @@ def register_seeker():
 
         if not request.form.get('age_verified') or not request.form.get('legally_eligible'):
             flash('Please confirm eligibility requirements.', 'error')
+            return redirect(url_for('auth.register_seeker'))
+
+        if not request.form.get('info_confirmed'):
+            flash('Please confirm that all information provided is accurate.', 'error')
             return redirect(url_for('auth.register_seeker'))
 
         resume_path = request.form.get('existing_resume') or resume_data.get('resume_path', '')
@@ -262,6 +271,12 @@ def register_company():
     if request.method == 'POST':
         email = request.form['email'].strip().lower()
         password = request.form.get('password', '')
+
+        required_fields = ['company_name', 'email', 'country']
+        missing_fields = [field for field in required_fields if not request.form.get(field, '').strip()]
+        if missing_fields:
+            flash('Please complete all required fields before submitting.', 'error')
+            return redirect(url_for('auth.register_company'))
 
         if len(password) < 8:
             flash('Password must be at least 8 characters.', 'error')

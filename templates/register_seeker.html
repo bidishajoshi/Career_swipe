@@ -269,16 +269,16 @@
                 </label>
               </div>
               {% elif q.field_type == 'select' %}
-              <select name="question_{{ q.id }}">
+              <select name="question_{{ q.id }}" {% if q.is_mandatory %}required{% endif %}>
                 <option value="">-- Select --</option>
                 {% for option in q.field_options %}
                 <option value="{{ option }}">{{ option }}</option>
                 {% endfor %}
               </select>
               {% elif q.field_type == 'number' %}
-              <input type="number" name="question_{{ q.id }}" value="">
+              <input type="number" name="question_{{ q.id }}" value="" {% if q.is_mandatory %}required{% endif %}>
               {% else %}
-              <input type="text" name="question_{{ q.id }}" value="">
+              <input type="text" name="question_{{ q.id }}" value="" {% if q.is_mandatory %}required{% endif %}>
               {% endif %}
             </div>
             {% endfor %}
@@ -345,7 +345,7 @@
 
           <div class="field">
             <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
-              <input type="checkbox" style="width: auto; margin-top: 4px;" required>
+              <input type="checkbox" name="info_confirmed" style="width: auto; margin-top: 4px;" required>
               <span>I certify that all information provided is true and accurate.</span>
             </label>
           </div>
