@@ -5,6 +5,7 @@ Covers: dashboard (with filters & AI scoring), profile edit, swipe action.
 
 import os
 import uuid
+from datetime import datetime
 
 from flask import (
     Blueprint, render_template, request, redirect,
@@ -344,8 +345,6 @@ def seeker_dashboard():
         .limit(10)
         .all()
     )
-
-    from datetime import datetime as dt_alias
 
     return render_template(
         "seeker_dashboard.html",
