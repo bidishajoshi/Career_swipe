@@ -88,9 +88,16 @@
             </div>
           </div>
 
+          
           <div class="field">
             <label>Country</label>
-            <input type="text" name="country" id="field-country" placeholder="e.g. Nepal, India, USA, etc." value="{{ country or '' }}">
+            <input type="text"
+       name="country"id="field-country"
+       required
+       pattern="[A-Za-z ]+"
+       title="Only letters allowed"
+       placeholder="Nepal"
+       value="{{ country or '' }}">
           </div>
 
           <div class="field">
@@ -105,7 +112,15 @@
             </div>
             <div class="field">
               <label>Phone number</label>
-              <input type="tel" name="phone" id="field-phone" required placeholder="+977 98XXXXXXXX" value="{{ phone }}">
+             <input type="tel"
+       name="phone"
+       id="field-phone"
+       required
+       pattern="[0-9]{7,15}"
+       maxlength="15"
+       title="Phone number must contain only digits"
+       value="{{ phone }}"
+       placeholder="XXXXXXXXXXXXXX">
             </div>
           </div>
 
@@ -595,23 +610,27 @@ function generateReview() {
        ${eligibilityAnswers.length ? '<ul style="padding-left: 1rem;">' + eligibilityAnswers.map(function(item) { return '<li><strong>' + item.question + '</strong>: ' + item.answer + '</li>'; }).join('') + '</ul>' : '<p>No eligibility answers provided.</p>'}
     </div>`;
 
-  showStep(6);
+ showStep(6);
 }
 
 window.addEventListener('DOMContentLoaded', function() {
-  showStep(currentStep);
+// Phone: numbers only, max 15 digits
+const phoneField = document.getElementById('field-phone');
 
-  var resumeInput = document.querySelector('input[name="resume"]');
-  if (resumeInput && document.querySelector('input[name="existing_resume"]')) {
-    resumeInput.dataset.hasExisting = '1';
-  }
+if (phoneField) {
+  phoneField.addEventListener('input', function () {
+    this.value = this.value.replace(/\D/g, '').slice(0, 15);
+  });
+}
 
-  var photoInput = document.getElementById('photo-input');
-  if (photoInput) {
-    photoInput.addEventListener('change', function() {
-      document.getElementById('photo-name').textContent = this.files[0] ? this.files[0].name : 'No file chosen';
-    });
-  }
+// Country: letters and spaces only
+const countryField = document.getElementById('field-country');
+
+if (countryField) {
+  countryField.addEventListener('input', function () {
+    this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
+  });
+}
 
   var autosaveTimer = null;
   var form = document.getElementById('application-form');
