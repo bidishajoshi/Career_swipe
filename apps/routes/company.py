@@ -91,6 +91,52 @@ def company_dashboard():
     )
 
 
+# ── Company Insights (Tile drill-down) ───────────────────────────────────────
+@company_bp.route('/company/insights', endpoint='company_insights')
+def company_insights():
+    company = _require_company()
+    if not company:
+        return redirect(url_for('auth.login_company'))
+
+    tab = (request.args.get('tab') or 'jobs').lower()
+    valid_tabs = {'jobs', 'applications', 'shortlisted', 'interview'}
+    if tab not in valid_tabs:
+        tab = 'jobs'
+
+    jobs = (
+        JobListing.query
+        .filter_by(company_id=company.id)
+        .order_by(JobListing.created_at.desc())
+        .all()
+    )
+
+    swipes = (
+        JobSwipe.query
+        .join(JobListing)
+        .filter(
+            JobListing.company_id == company.id,
+            JobSwipe.direction == 'right',
+        )
+        .order_by(JobSwipe.created_at.desc())
+        .all()
+    )
+
+    if tab == 'shortlisted':
+        swipes = [sw for sw in swipes if (sw.status or '').lower() == 'shortlisted']
+    elif tab == 'interview':
+        swipes = [sw for sw in swipes if (sw.status or '').lower() == 'interview']
+
+    applicants = build_applicant_cards(swipes)
+
+    return render_template(
+        'company_insights.html',
+        company=company,
+        jobs=jobs,
+        applicants=applicants,
+        tab=tab,
+    )
+
+
 # ── Update Applicant Status ───────────────────────────────────────────────────
 @company_bp.route('/applicant/<int:swipe_id>/<action>', endpoint='update_applicant')
 def update_applicant(swipe_id, action):

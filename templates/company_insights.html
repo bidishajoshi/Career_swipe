@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Company Insights - CareerSwipe{% endblock %}
+
+{% block head %}
+<style>
+  .insights-wrap { max-width: 1100px; margin: 2.5rem auto; padding: 0 1.5rem; }
+  .insights-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+  .insights-title { font-family: 'Syne', sans-serif; font-size: 2rem; margin: 0; color: var(--text); }
+  .insights-tabs { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .insights-tab { padding: 0.5rem 0.9rem; border-radius: 999px; border: 1px solid var(--border, rgba(255,255,255,0.1)); text-decoration: none; color: var(--text); font-size: 0.9rem; }
+  .insights-tab.active { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.6); color: #93c5fd; }
+  .insights-card { background: var(--bg-card, #1b2230); border: 1px solid var(--border, rgba(255,255,255,0.1)); border-radius: 16px; padding: 1rem; }
+  .jobs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+  .job-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 1rem; }
+  .job-item h3 { margin: 0 0 0.35rem 0; font-size: 1.05rem; color: var(--text); }
+  .job-meta { font-size: 0.85rem; color: var(--text-muted, #94a3b8); }
+  .applicant-list { display: grid; gap: 0.9rem; }
+  .applicant-item { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.9rem 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); }
+  .applicant-main { display: flex; align-items: center; gap: 0.8rem; }
+  .applicant-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(59,130,246,0.25); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #93c5fd; }
+  .applicant-name { margin: 0; font-size: 0.98rem; color: var(--text); }
+  .applicant-sub { margin: 0; font-size: 0.8rem; color: var(--text-muted, #94a3b8); }
+  .status-pill { padding: 0.25rem 0.6rem; border-radius: 999px; font-size: 0.75rem; background: rgba(148,163,184,0.12); color: #e2e8f0; text-transform: capitalize; }
+  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted, #94a3b8); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="insights-wrap">
+  <div class="insights-header">
+    <h1 class="insights-title">Company Insights</h1>
+    <a href="{{ url_for('company.company_dashboard') }}" class="btn btn-outline">Back to Dashboard</a>
+  </div>
+
+  <div class="insights-tabs">
+    <a class="insights-tab {{ 'active' if tab == 'jobs' else '' }}" href="{{ url_for('company.company_insights', tab='jobs') }}">Active Jobs</a>
+    <a class="insights-tab {{ 'active' if tab == 'applications' else '' }}" href="{{ url_for('company.company_insights', tab='applications') }}">Applications</a>
+    <a class="insights-tab {{ 'active' if tab == 'shortlisted' else '' }}" href="{{ url_for('company.company_insights', tab='shortlisted') }}">Shortlisted</a>
+    <a class="insights-tab {{ 'active' if tab == 'interview' else '' }}" href="{{ url_for('company.company_insights', tab='interview') }}">Interviewing</a>
+  </div>
+
+  <div style="margin-top: 1.5rem;" class="insights-card">
+    {% if tab == 'jobs' %}
+      {% if jobs %}
+      <div class="jobs-grid">
+        {% for job in jobs %}
+        <div class="job-item">
+          <h3>{{ job.title or 'Untitled role' }}</h3>
+          <div class="job-meta">{{ job.job_type or 'Job' }} · {{ job.job_location_type or 'Flexible' }}</div>
+          <div class="job-meta">{{ job.location or 'Remote' }} · {{ job.salary or 'Competitive' }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">No jobs found.</div>
+      {% endif %}
+    {% else %}
+      {% if applicants %}
+      <div class="applicant-list">
+        {% for a in applicants %}
+        <div class="applicant-item">
+          <div class="applicant-main">
+            <div class="applicant-avatar">{{ a.initials }}</div>
+            <div>
+              <p class="applicant-name">{{ a.full_name }}</p>
+              <p class="applicant-sub">{{ a.job_title }} · {{ a.email }}</p>
+            </div>
+          </div>
+          <span class="status-pill">{{ a.status_label }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">No applicants found.</div>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

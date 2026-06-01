@@ -75,34 +75,34 @@
       </header>
 
       <div class="stats-grid-v2">
-        <div class="stat-card-v2 glass">
+        <a class="stat-card-v2 glass" href="{{ url_for('company.company_insights', tab='jobs') }}" style="text-decoration:none;color:inherit">
           <div class="stat-icon-wrap blue">J</div>
           <div class="stat-data">
             <span class="stat-value">{{ jobs|length }}</span>
             <span class="stat-title">Active Jobs</span>
           </div>
-        </div>
-        <div class="stat-card-v2 glass">
+        </a>
+        <a class="stat-card-v2 glass" href="{{ url_for('company.company_insights', tab='applications') }}" style="text-decoration:none;color:inherit">
           <div class="stat-icon-wrap green">A</div>
           <div class="stat-data">
             <span class="stat-value">{{ applicants|length }}</span>
             <span class="stat-title">Applications</span>
           </div>
-        </div>
-        <div class="stat-card-v2 glass">
+        </a>
+        <a class="stat-card-v2 glass" href="{{ url_for('company.company_insights', tab='shortlisted') }}" style="text-decoration:none;color:inherit">
           <div class="stat-icon-wrap purple">S</div>
           <div class="stat-data">
             <span class="stat-value">{{ applicants|selectattr('status', 'equalto', 'shortlisted')|list|length }}</span>
             <span class="stat-title">Shortlisted</span>
           </div>
-        </div>
-        <div class="stat-card-v2 glass">
+        </a>
+        <a class="stat-card-v2 glass" href="{{ url_for('company.company_insights', tab='interview') }}" style="text-decoration:none;color:inherit">
           <div class="stat-icon-wrap orange">I</div>
           <div class="stat-data">
             <span class="stat-value">{{ applicants|selectattr('status', 'equalto', 'interview')|list|length }}</span>
             <span class="stat-title">Interviewing</span>
           </div>
-        </div>
+        </a>
       </div>
 
       <section id="jobs-section" class="dash-section">
