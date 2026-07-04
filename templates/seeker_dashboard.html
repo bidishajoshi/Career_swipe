@@ -209,9 +209,7 @@
                 </div>
                 <div class="jc-company-row">
                   <span class="jc-comp-name">{{ job.company_name }}</span>
-                  {% if job.location %}
-                  <span class="jc-loc">📍 {{ job.location }}</span>
-                  {% endif %}
+                  <span class="jc-loc">{{ job.location | format_location }}</span>
                 </div>
                 <div class="jc-tags">
                   <span class="tag-pill">⏱ {{ job.job_type }}</span>

@@ -47,7 +47,7 @@
         <div class="job-item">
           <h3>{{ job.title or 'Untitled role' }}</h3>
           <div class="job-meta">{{ job.job_type or 'Job' }} · {{ job.job_location_type or 'Flexible' }}</div>
-          <div class="job-meta">{{ job.location or 'Remote' }} · {{ job.salary or 'Competitive' }}</div>
+          <div class="job-meta">{{ job.location | format_location }} · {{ job.salary or 'Competitive' }}</div>
         </div>
         {% endfor %}
       </div>

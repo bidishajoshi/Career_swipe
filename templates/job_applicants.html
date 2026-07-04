@@ -215,9 +215,7 @@
     {% if job.job_location_type %}
       <span class="ja-meta-chip">{{ job.job_location_type }}</span>
     {% endif %}
-    {% if job.location %}
-      <span class="ja-meta-chip">📍 {{ job.location }}</span>
-    {% endif %}
+    <span class="ja-meta-chip">{{ job.location | format_location }}</span>
     {% if job.salary %}
       <span class="ja-meta-chip">💰 {{ job.salary }}</span>
     {% endif %}

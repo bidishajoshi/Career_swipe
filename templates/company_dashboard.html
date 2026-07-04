@@ -128,7 +128,7 @@
               <div class="jc-menu-btn" aria-hidden="true">...</div>
             </div>
             <div class="jc-meta-v2">
-              <div class="meta-item"><span>Location</span> {{ job.location or 'Remote' }}</div>
+              <div class="meta-item"><span>Location</span> {{ job.location | format_location }}</div>
               <div class="meta-item"><span>Salary</span> {{ job.salary or 'Competitive' }}</div>
               <div class="meta-item"><span>Mode</span> {{ job.job_location_type or 'Flexible' }}</div>
             </div>

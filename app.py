@@ -38,6 +38,9 @@ from utils.resume_parser import process_resume
 app = Flask(__name__, static_folder=None)
 app.config.from_object(Config)
 
+from utils.helpers import format_job_location
+app.jinja_env.filters['format_location'] = format_job_location
+
 try:
     from flask_wtf import CSRFProtect
     csrf = CSRFProtect(app)
