@@ -7,13 +7,12 @@ import os
 from flask import Flask, render_template
 from werkzeug.exceptions import HTTPException
 
-# CSRF protection via Flask-WTF when the dependency is installed.
+# CSRF protection via Flask-WTF
 try:
     from flask_wtf import CSRFProtect
+    csrf = CSRFProtect()
 except ImportError:
-    CSRFProtect = None
-
-csrf = CSRFProtect() if CSRFProtect else None
+    csrf = None
 
 from .extensions import db, migrate, mail
 from .config import Config
@@ -44,6 +43,13 @@ def create_app(config_class=Config):
     mail.init_app(app)
     if csrf:
         csrf.init_app(app)  # Enable CSRF protection for all forms
+
+    @app.context_processor
+    def inject_csrf_fallback():
+        """Ensure templates don't crash if CSRF is disabled or fails to load."""
+        if 'csrf_token' not in app.jinja_env.globals:
+            return {'csrf_token': lambda: ""}
+        return {}
 
     # Ensure upload directories exist
     with app.app_context():
@@ -105,8 +111,7 @@ def create_app(config_class=Config):
     def handle_exception(e):
         if isinstance(e, HTTPException):
             return e
-        import traceback
-        traceback.print_exc()
+        app.logger.error(f"Unhandled Exception: {str(e)}", exc_info=True)
         return render_template('error.html', error=str(e)), 500
 
     @app.errorhandler(404)

@@ -38,6 +38,19 @@ from utils.resume_parser import process_resume
 app = Flask(__name__, static_folder=None)
 app.config.from_object(Config)
 
+try:
+    from flask_wtf import CSRFProtect
+    csrf = CSRFProtect(app)
+except ImportError:
+    csrf = None
+
+@app.context_processor
+def inject_csrf_fallback():
+    """Ensure templates don't crash if CSRF is disabled or fails to load."""
+    if 'csrf_token' not in app.jinja_env.globals:
+        return {'csrf_token': lambda: ""}
+    return {}
+
 
 @app.route("/static/<path:filename>", endpoint="static")
 def static_files(filename):
@@ -85,8 +98,7 @@ app.register_blueprint(eligibility_bp, url_prefix='')
 def handle_exception(e):
     if isinstance(e, HTTPException):
         return e
-    import traceback
-    traceback.print_exc()
+    app.logger.error(f"Unhandled Exception: {str(e)}", exc_info=True)
     return render_template("error.html", error=str(e)), 500
 
 @app.errorhandler(404)
