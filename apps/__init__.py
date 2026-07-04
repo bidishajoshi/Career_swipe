@@ -127,4 +127,7 @@ def create_app(config_class=Config):
     def not_found(e):
         return render_template('error.html', error='Page not found (404)'), 404
 
+    # Register custom Jinja filters
+    from utils.helpers import format_job_location
+    app.jinja_env.filters['format_location'] = format_job_location
     return app
