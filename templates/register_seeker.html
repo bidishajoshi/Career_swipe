@@ -509,6 +509,18 @@ function validateCurrentStep() {
         markFieldInvalid(field, 'Please upload a file.');
         valid = false;
       }
+    } else if (field.type === 'password' && field.value) {
+      var pw = field.value;
+      var errors = [];
+      if (pw.length < 8) errors.push('at least 8 chars');
+      if (!/[A-Z]/.test(pw)) errors.push('uppercase letter');
+      if (!/[a-z]/.test(pw)) errors.push('lowercase letter');
+      if (!/[0-9]/.test(pw)) errors.push('number');
+      if (!/[^A-Za-z0-9]/.test(pw)) errors.push('special character');
+      if (errors.length > 0) {
+        markFieldInvalid(field, 'Needs: ' + errors.join(', '));
+        valid = false;
+      }
     } else if (!field.value || !field.checkValidity()) {
       var labelEl = field.closest('.field');
       labelEl = labelEl ? labelEl.querySelector('label') : null;

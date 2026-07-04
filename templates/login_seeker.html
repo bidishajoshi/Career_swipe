@@ -15,7 +15,7 @@
       <div class="field">
         <label for="login-email">Email address</label>
         <input type="email" id="login-email" name="email" required autofocus
-               placeholder="you@example.com">
+               placeholder="you@example.com" value="{{ entered_email if entered_email else '' }}">
       </div>
       <div class="field">
         <label for="login-password">Password</label>

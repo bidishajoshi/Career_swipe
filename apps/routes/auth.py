@@ -46,6 +46,23 @@ def safe_check_password(password_hash, password):
         return False
 
 
+def validate_strong_password(password):
+    """Return a list of unmet password requirements, or an empty list if all pass."""
+    import re
+    errors = []
+    if len(password) < 8:
+        errors.append('Password must be at least 8 characters long.')
+    if not re.search(r'[A-Z]', password):
+        errors.append('Password must contain at least one uppercase letter (A–Z).')
+    if not re.search(r'[a-z]', password):
+        errors.append('Password must contain at least one lowercase letter (a–z).')
+    if not re.search(r'[0-9]', password):
+        errors.append('Password must contain at least one number (0–9).')
+    if not re.search(r'[^A-Za-z0-9]', password):
+        errors.append('Password must contain at least one special character (e.g. @, #, $, %, &, !, *).')
+    return errors
+
+
 # ── Home ──────────────────────────────────────────────────────────────────────
 @auth_bp.route('/')
 def index():
@@ -130,8 +147,10 @@ def register_seeker():
         email = request.form['email'].strip().lower()
 
         password = request.form.get('password', '')
-        if len(password) < 8:
-            flash('Password must be at least 8 characters.', 'error')
+        pw_errors = validate_strong_password(password)
+        if pw_errors:
+            for err in pw_errors:
+                flash(err, 'error')
             return redirect(url_for('auth.register_seeker'))
 
         if Seeker.query.filter_by(email=email).first():
@@ -278,8 +297,10 @@ def register_company():
             flash('Please complete all required fields before submitting.', 'error')
             return redirect(url_for('auth.register_company'))
 
-        if len(password) < 8:
-            flash('Password must be at least 8 characters.', 'error')
+        pw_errors = validate_strong_password(password)
+        if pw_errors:
+            for err in pw_errors:
+                flash(err, 'error')
             return redirect(url_for('auth.register_company'))
 
         if Company.query.filter_by(email=email).first():
@@ -352,33 +373,47 @@ def register_company():
 # ── Seeker Login ──────────────────────────────────────────────────────────────
 @auth_bp.route('/login/seeker', methods=['GET', 'POST'])
 def login_seeker():
+    entered_email = ''
     if request.method == 'POST':
-        email = request.form['email'].strip().lower()
-        user  = Seeker.query.filter_by(email=email).first()
+        entered_email = request.form.get('email', '').strip().lower()
+        user = Seeker.query.filter_by(email=entered_email).first()
 
         if user and safe_check_password(user.password_hash, request.form.get('password', '')):
             session['seeker_id']   = user.id
             session['seeker_name'] = user.first_name
             return redirect(url_for('seeker.seeker_dashboard'))
 
-        flash('Invalid email or password.', 'error')
-    return render_template('login_seeker.html')
+        if not user:
+            flash('Email not found.', 'error')
+        elif not safe_check_password(user.password_hash, request.form.get('password', '')):
+            flash('Incorrect password.', 'error')
+        else:
+            flash('Invalid email or password.', 'error')
+
+    return render_template('login_seeker.html', entered_email=entered_email)
 
 
 # ── Company Login ─────────────────────────────────────────────────────────────
 @auth_bp.route('/login/company', methods=['GET', 'POST'])
 def login_company():
+    entered_email = ''
     if request.method == 'POST':
-        email = request.form['email'].strip().lower()
-        co    = Company.query.filter_by(email=email).first()
+        entered_email = request.form.get('email', '').strip().lower()
+        co = Company.query.filter_by(email=entered_email).first()
 
         if co and safe_check_password(co.password_hash, request.form.get('password', '')):
             session['company_id']   = co.id
             session['company_name'] = co.company_name
             return redirect(url_for('company.company_dashboard'))
 
-        flash('Invalid email or password.', 'error')
-    return render_template('login_company.html')
+        if not co:
+            flash('Email not found.', 'error')
+        elif not safe_check_password(co.password_hash, request.form.get('password', '')):
+            flash('Incorrect password.', 'error')
+        else:
+            flash('Invalid email or password.', 'error')
+
+    return render_template('login_company.html', entered_email=entered_email)
 
 
 # ── Logout ────────────────────────────────────────────────────────────────────

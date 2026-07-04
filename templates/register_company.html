@@ -137,13 +137,20 @@ document.querySelector('.auth-form').addEventListener('submit', function(e) {
   }
   
   if (!password) {
-    alert('❌ Password is required! (Min 8 characters)');
+    alert('❌ Password is required!');
     e.preventDefault();
     return false;
   }
+
+  var pwErrors = [];
+  if (password.length < 8) pwErrors.push('at least 8 characters');
+  if (!/[A-Z]/.test(password)) pwErrors.push('one uppercase letter');
+  if (!/[a-z]/.test(password)) pwErrors.push('one lowercase letter');
+  if (!/[0-9]/.test(password)) pwErrors.push('one number');
+  if (!/[^A-Za-z0-9]/.test(password)) pwErrors.push('one special character');
   
-  if (password.length < 8) {
-    alert('❌ Password must be at least 8 characters long!');
+  if (pwErrors.length > 0) {
+    alert('❌ Password must contain:\n- ' + pwErrors.join('\n- '));
     e.preventDefault();
     return false;
   }
