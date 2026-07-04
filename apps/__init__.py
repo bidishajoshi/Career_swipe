@@ -93,17 +93,26 @@ def create_app(config_class=Config):
         'seeker_dashboard': '/dashboard/seeker',
         'edit_seeker_profile': '/profile/seeker',
         'company_dashboard': '/dashboard/company',
+        'company_insights': '/company/insights',
         'post_job': '/jobs/post',
         'notifications_history': '/notifications',
     }
     for endpoint, rule in legacy_endpoints.items():
         if endpoint not in app.view_functions:
             app.add_url_rule(rule, endpoint=endpoint, redirect_to=rule)
+            
+    # Add rules with path variables
     if 'update_applicant' not in app.view_functions:
         app.add_url_rule(
             '/applicant/<int:swipe_id>/<action>',
             endpoint='update_applicant',
             redirect_to='/applicant/%(swipe_id)s/%(action)s',
+        )
+    if 'job_applicants' not in app.view_functions:
+        app.add_url_rule(
+            '/company/job/<int:job_id>/applicants',
+            endpoint='job_applicants',
+            redirect_to='/company/job/%(job_id)s/applicants',
         )
 
     # Global error handlers

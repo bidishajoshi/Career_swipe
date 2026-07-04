@@ -75,29 +75,29 @@
       </header>
 
       <div class="stats-grid-v2">
-        <a class="stat-card-v2 glass" href="{{ url_for('company.company_insights', tab='jobs') }}" style="text-decoration:none;color:inherit">
-          <div class="stat-icon-wrap blue">J</div>
+        <a class="stat-card-v2 glass" href="{{ url_for('company_insights', tab='jobs') }}" style="text-decoration:none;color:inherit">
+          <div class="stat-icon"><i class="fa-solid fa-briefcase"></i></div>
           <div class="stat-data">
             <span class="stat-value">{{ jobs|length }}</span>
             <span class="stat-title">Active Jobs</span>
           </div>
         </a>
-        <a class="stat-card-v2 glass" href="{{ url_for('company.company_insights', tab='applications') }}" style="text-decoration:none;color:inherit">
-          <div class="stat-icon-wrap green">A</div>
+        <a class="stat-card-v2 glass" href="{{ url_for('company_insights', tab='applications') }}" style="text-decoration:none;color:inherit">
+          <div class="stat-icon" style="color:#f59e0b; background:rgba(245,158,11,0.15)"><i class="fa-solid fa-users"></i></div>
           <div class="stat-data">
             <span class="stat-value">{{ applicants|length }}</span>
             <span class="stat-title">Applications</span>
           </div>
         </a>
-        <a class="stat-card-v2 glass" href="{{ url_for('company.company_insights', tab='shortlisted') }}" style="text-decoration:none;color:inherit">
-          <div class="stat-icon-wrap purple">S</div>
+        <a class="stat-card-v2 glass" href="{{ url_for('company_insights', tab='shortlisted') }}" style="text-decoration:none;color:inherit">
+          <div class="stat-icon" style="color:#10b981; background:rgba(16,185,129,0.15)"><i class="fa-solid fa-star"></i></div>
           <div class="stat-data">
             <span class="stat-value">{{ applicants|selectattr('status', 'equalto', 'shortlisted')|list|length }}</span>
             <span class="stat-title">Shortlisted</span>
           </div>
         </a>
-        <a class="stat-card-v2 glass" href="{{ url_for('company.company_insights', tab='interview') }}" style="text-decoration:none;color:inherit">
-          <div class="stat-icon-wrap orange">I</div>
+        <a class="stat-card-v2 glass" href="{{ url_for('company_insights', tab='interview') }}" style="text-decoration:none;color:inherit">
+          <div class="stat-icon" style="color:#8b5cf6; background:rgba(139,92,246,0.15)"><i class="fa-solid fa-calendar-check"></i></div>
           <div class="stat-data">
             <span class="stat-value">{{ applicants|selectattr('status', 'equalto', 'interview')|list|length }}</span>
             <span class="stat-title">Interviewing</span>
@@ -135,8 +135,8 @@
             <div class="jc-footer-v2">
               <div class="jc-date">Posted {{ job.created_at.strftime('%b %d') if job.created_at else 'recently' }}</div>
               <div class="jc-stats">
-                <a href="{{ url_for('company.job_applicants', job_id=job.id) }}" title="View applicants" style="color:inherit;text-decoration:none;">
-                  <span title="Applications">{{ applicants|selectattr('job_id', 'equalto', job.id)|list|length }} applicants</span>
+                <a href="{{ url_for('job_applicants', job_id=job.id) }}" title="View applicants" style="color:inherit;text-decoration:none;">
+                  <span style="font-size:1.4rem; font-weight:700; color:var(--text)">{{ applicants|selectattr('job_id', 'equalto', job.id)|list|length }}</span> applicants
                 </a>
               </div>
             </div>

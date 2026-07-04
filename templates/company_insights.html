@@ -33,10 +33,10 @@
   </div>
 
   <div class="insights-tabs">
-    <a class="insights-tab {{ 'active' if tab == 'jobs' else '' }}" href="{{ url_for('company.company_insights', tab='jobs') }}">Active Jobs</a>
-    <a class="insights-tab {{ 'active' if tab == 'applications' else '' }}" href="{{ url_for('company.company_insights', tab='applications') }}">Applications</a>
-    <a class="insights-tab {{ 'active' if tab == 'shortlisted' else '' }}" href="{{ url_for('company.company_insights', tab='shortlisted') }}">Shortlisted</a>
-    <a class="insights-tab {{ 'active' if tab == 'interview' else '' }}" href="{{ url_for('company.company_insights', tab='interview') }}">Interviewing</a>
+    <a class="insights-tab {{ 'active' if tab == 'jobs' else '' }}" href="{{ url_for('company_insights', tab='jobs') }}">Active Jobs</a>
+    <a class="insights-tab {{ 'active' if tab == 'applications' else '' }}" href="{{ url_for('company_insights', tab='applications') }}">Applications</a>
+    <a class="insights-tab {{ 'active' if tab == 'shortlisted' else '' }}" href="{{ url_for('company_insights', tab='shortlisted') }}">Shortlisted</a>
+    <a class="insights-tab {{ 'active' if tab == 'interview' else '' }}" href="{{ url_for('company_insights', tab='interview') }}">Interviewing</a>
   </div>
 
   <div style="margin-top: 1.5rem;" class="insights-card">

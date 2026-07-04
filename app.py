@@ -1079,6 +1079,85 @@ def company_dashboard():
     )
 
 
+@app.route("/company/job/<int:job_id>/applicants", endpoint="job_applicants")
+def job_applicants(job_id):
+    if "company_id" not in session:
+        return redirect(url_for("login_company"))
+    
+    company = db.session.get(Company, session["company_id"])
+    if not company:
+        session.clear()
+        return redirect(url_for("login_company"))
+        
+    job = db.session.get(JobListing, job_id)
+    if not job or job.company_id != company.id:
+        flash("Job not found.", "error")
+        return redirect(url_for("company_dashboard"))
+
+    swipes = (
+        JobSwipe.query
+        .filter_by(job_id=job_id, direction="right")
+        .order_by(JobSwipe.created_at.desc())
+        .all()
+    )
+    applicants = build_applicant_cards(swipes)
+
+    return render_template(
+        "job_applicants.html",
+        company=company,
+        job=job,
+        applicants=applicants,
+    )
+
+@app.route("/company/insights", endpoint="company_insights")
+def company_insights():
+    if "company_id" not in session:
+        return redirect(url_for("login_company"))
+    
+    company = db.session.get(Company, session["company_id"])
+    if not company:
+        session.clear()
+        return redirect(url_for("login_company"))
+        
+    tab = (request.args.get("tab") or "jobs").lower()
+    valid_tabs = {"jobs", "applications", "shortlisted", "interview"}
+    if tab not in valid_tabs:
+        tab = "jobs"
+
+    jobs = (
+        JobListing.query
+        .filter_by(company_id=company.id)
+        .order_by(JobListing.created_at.desc())
+        .all()
+    )
+
+    swipes = (
+        JobSwipe.query
+        .join(JobListing)
+        .filter(
+            JobListing.company_id == company.id,
+            JobSwipe.direction == "right",
+        )
+        .order_by(JobSwipe.created_at.desc())
+        .all()
+    )
+
+    if tab == "shortlisted":
+        swipes = [sw for sw in swipes if (sw.status or "").lower() == "shortlisted"]
+    elif tab == "interview":
+        swipes = [sw for sw in swipes if (sw.status or "").lower() == "interview"]
+
+    applicants = build_applicant_cards(swipes)
+
+    return render_template(
+        "company_insights.html",
+        company=company,
+        jobs=jobs,
+        applicants=applicants,
+        tab=tab,
+    )
+
+
 @app.route("/jobs/post", methods=["GET", "POST"])
 def post_job():
     if "company_id" not in session:
