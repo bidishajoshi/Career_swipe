@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% block title %}Applicants – {{ job.title }} | CareerSwipe{% endblock %}
+
+{% block head %}
+<style>
+  /* ── Page wrapper ─────────────────────────────────────────────────────────── */
+  .ja-wrap {
+    max-width: 1100px;
+    margin: 2.5rem auto;
+    padding: 0 1.5rem 4rem;
+  }
+
+  /* ── Page header ──────────────────────────────────────────────────────────── */
+  .ja-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  .ja-header-left h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.85rem;
+    margin: 0 0 0.25rem;
+    color: var(--text, #e2e8f0);
+  }
+  .ja-header-left p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-muted, #94a3b8);
+  }
+
+  /* ── Summary meta chips ───────────────────────────────────────────────────── */
+  .ja-meta {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.75rem;
+  }
+  .ja-meta-chip {
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid var(--border, rgba(255,255,255,0.1));
+    font-size: 0.82rem;
+    color: var(--text-muted, #94a3b8);
+    background: rgba(255,255,255,0.03);
+  }
+
+  /* ── Table card ──────────────────────────────────────────────────────────── */
+  .ja-card {
+    background: var(--bg-card, #1b2230);
+    border: 1px solid var(--border, rgba(255,255,255,0.1));
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  /* ── Responsive table ────────────────────────────────────────────────────── */
+  .ja-table-wrap { overflow-x: auto; }
+  .ja-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  .ja-table thead {
+    background: rgba(255,255,255,0.04);
+  }
+  .ja-table th {
+    padding: 0.85rem 1.1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, #94a3b8);
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border, rgba(255,255,255,0.08));
+  }
+  .ja-table td {
+    padding: 0.9rem 1.1rem;
+    border-bottom: 1px solid var(--border, rgba(255,255,255,0.06));
+    color: var(--text, #e2e8f0);
+    vertical-align: middle;
+  }
+  .ja-table tbody tr:last-child td { border-bottom: none; }
+  .ja-table tbody tr:hover { background: rgba(59,130,246,0.04); }
+
+  /* ── Applicant name cell ──────────────────────────────────────────────────── */
+  .ja-name-cell { display: flex; align-items: center; gap: 0.7rem; }
+  .ja-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(59,130,246,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.8rem;
+    color: #93c5fd;
+    flex-shrink: 0;
+  }
+  .ja-name { font-weight: 600; color: var(--text, #e2e8f0); margin: 0; }
+  .ja-email { font-size: 0.8rem; color: var(--text-muted, #94a3b8); margin: 0; }
+
+  /* ── Status badge ────────────────────────────────────────────────────────── */
+  .ja-status {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    white-space: nowrap;
+  }
+  .ja-status.status-pending    { background: rgba(234,179,8,0.15);  color: #fde047; }
+  .ja-status.status-shortlisted{ background: rgba(59,130,246,0.15); color: #93c5fd; }
+  .ja-status.status-interview  { background: rgba(168,85,247,0.15); color: #c084fc; }
+  .ja-status.status-hired      { background: rgba(34,197,94,0.15);  color: #86efac; }
+  .ja-status.status-rejected   { background: rgba(239,68,68,0.15);  color: #fca5a5; }
+
+  /* ── Resume action button ────────────────────────────────────────────────── */
+  .ja-resume-link {
+    display: inline-block;
+    padding: 0.3rem 0.7rem;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid rgba(59,130,246,0.4);
+    color: #93c5fd;
+    transition: background 0.2s, border-color 0.2s;
+    white-space: nowrap;
+  }
+  .ja-resume-link:hover {
+    background: rgba(59,130,246,0.12);
+    border-color: rgba(59,130,246,0.7);
+  }
+  .ja-no-resume {
+    font-size: 0.78rem;
+    color: var(--text-muted, #94a3b8);
+  }
+
+  /* ── Empty state ─────────────────────────────────────────────────────────── */
+  .ja-empty {
+    text-align: center;
+    padding: 4rem 1.5rem;
+    color: var(--text-muted, #94a3b8);
+  }
+  .ja-empty-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.5;
+  }
+  .ja-empty h3 {
+    font-size: 1.1rem;
+    color: var(--text, #e2e8f0);
+    margin: 0 0 0.4rem;
+  }
+  .ja-empty p { font-size: 0.9rem; margin: 0; }
+
+  /* ── Back button ─────────────────────────────────────────────────────────── */
+  .btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--border, rgba(255,255,255,0.12));
+    color: var(--text, #e2e8f0);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .btn-back:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  /* ── Light-mode overrides ────────────────────────────────────────────────── */
+  body.light-mode .ja-card { background: #ffffff; border-color: rgba(0,0,0,0.1); }
+  body.light-mode .ja-table thead { background: rgba(0,0,0,0.03); }
+  body.light-mode .ja-table th { color: #64748b; border-bottom-color: rgba(0,0,0,0.08); }
+  body.light-mode .ja-table td { color: #1e293b; border-bottom-color: rgba(0,0,0,0.06); }
+  body.light-mode .ja-table tbody tr:hover { background: rgba(59,130,246,0.04); }
+  body.light-mode .ja-avatar { background: rgba(59,130,246,0.15); color: #2563eb; }
+  body.light-mode .ja-name { color: #1e293b; }
+  body.light-mode .ja-email { color: #64748b; }
+  body.light-mode .ja-header-left h1 { color: #0f172a; }
+  body.light-mode .ja-meta-chip { color: #475569; background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.1); }
+  body.light-mode .btn-back { color: #334155; border-color: rgba(0,0,0,0.12); }
+  body.light-mode .btn-back:hover { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.2); }
+  body.light-mode .ja-no-resume { color: #94a3b8; }
+  body.light-mode .ja-empty { color: #64748b; }
+  body.light-mode .ja-empty h3 { color: #1e293b; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ja-wrap">
+
+  <!-- Page header -->
+  <div class="ja-header">
+    <div class="ja-header-left">
+      <h1>Applicants</h1>
+      <p>{{ job.title or 'Untitled role' }} &mdash; {{ applicants|length }} applicant{% if applicants|length != 1 %}s{% endif %}</p>
+    </div>
+    <a href="{{ url_for('company.company_dashboard') }}" class="btn-back">
+      &#8592; Back to Dashboard
+    </a>
+  </div>
+
+  <!-- Job meta chips -->
+  <div class="ja-meta">
+    {% if job.job_type %}
+      <span class="ja-meta-chip">{{ job.job_type }}</span>
+    {% endif %}
+    {% if job.job_location_type %}
+      <span class="ja-meta-chip">{{ job.job_location_type }}</span>
+    {% endif %}
+    {% if job.location %}
+      <span class="ja-meta-chip">📍 {{ job.location }}</span>
+    {% endif %}
+    {% if job.salary %}
+      <span class="ja-meta-chip">💰 {{ job.salary }}</span>
+    {% endif %}
+    {% if job.created_at %}
+      <span class="ja-meta-chip">Posted {{ job.created_at.strftime('%b %d, %Y') }}</span>
+    {% endif %}
+  </div>
+
+  <!-- Applicants card -->
+  <div class="ja-card glass">
+    {% if applicants %}
+    <div class="ja-table-wrap">
+      <table class="ja-table" aria-label="Applicants for {{ job.title }}">
+        <thead>
+          <tr>
+            <th scope="col">Applicant</th>
+            <th scope="col">Phone</th>
+            <th scope="col">Applied Date</th>
+            <th scope="col">Resume</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in applicants %}
+          <tr>
+            <!-- Name + Email -->
+            <td>
+              <div class="ja-name-cell">
+                <div class="ja-avatar" aria-hidden="true">{{ a.initials }}</div>
+                <div>
+                  <p class="ja-name">{{ a.full_name or 'Unnamed Applicant' }}</p>
+                  <p class="ja-email">{{ a.email }}</p>
+                </div>
+              </div>
+            </td>
+
+            <!-- Phone -->
+            <td>
+              {% if a.phone %}
+                <span>{{ a.phone }}</span>
+              {% else %}
+                <span class="ja-no-resume">—</span>
+              {% endif %}
+            </td>
+
+            <!-- Applied Date -->
+            <td>
+              {% if a.applied_at %}
+                {{ a.applied_at.strftime('%b %d, %Y') }}
+              {% else %}
+                <span class="ja-no-resume">—</span>
+              {% endif %}
+            </td>
+
+            <!-- Resume -->
+            <td>
+              {% if a.resume_path %}
+                <a href="{{ url_for('static', filename=a.resume_path) }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="ja-resume-link"
+                   aria-label="View resume for {{ a.full_name }}">
+                  View / Download
+                </a>
+              {% else %}
+                <span class="ja-no-resume">No resume</span>
+              {% endif %}
+            </td>
+
+            <!-- Status -->
+            <td>
+              <span class="ja-status status-{{ a.status_class }}">{{ a.status_label }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="ja-empty">
+      <div class="ja-empty-icon">📭</div>
+      <h3>No applicants yet.</h3>
+      <p>Once seekers apply to this job, they will appear here.</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

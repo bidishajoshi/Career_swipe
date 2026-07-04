@@ -156,6 +156,7 @@ def build_applicant_cards(swipes):
             "full_name": f"{first_name} {last_name}".strip(),
             "initials": f"{first_name[:1]}{last_name[:1]}".upper() or "CS",
             "email": getattr(seeker, "email", "") or "No email provided",
+            "phone": getattr(seeker, "phone", "") or "",
             "skills": skills,
             "skill_count": len(skills),
             "resume_path": normalize_static_path(getattr(seeker, "resume_path", "") or ""),

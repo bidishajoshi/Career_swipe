@@ -91,6 +91,35 @@ def company_dashboard():
     )
 
 
+# ── Job-specific Applicants Page ──────────────────────────────────────────────
+@company_bp.route('/company/job/<int:job_id>/applicants', endpoint='job_applicants')
+def job_applicants(job_id):
+    company = _require_company()
+    if not company:
+        return redirect(url_for('auth.login_company'))
+
+    job = db.session.get(JobListing, job_id)
+    if not job or job.company_id != company.id:
+        flash('Job not found.', 'error')
+        return redirect(url_for('company.company_dashboard'))
+
+    swipes = (
+        JobSwipe.query
+        .filter_by(job_id=job_id, direction='right')
+        .order_by(JobSwipe.created_at.desc())
+        .all()
+    )
+
+    applicants = build_applicant_cards(swipes)
+
+    return render_template(
+        'job_applicants.html',
+        company=company,
+        job=job,
+        applicants=applicants,
+    )
+
+
 # ── Company Insights (Tile drill-down) ───────────────────────────────────────
 @company_bp.route('/company/insights', endpoint='company_insights')
 def company_insights():

@@ -135,7 +135,9 @@
             <div class="jc-footer-v2">
               <div class="jc-date">Posted {{ job.created_at.strftime('%b %d') if job.created_at else 'recently' }}</div>
               <div class="jc-stats">
-                <span title="Applications">{{ applicants|selectattr('job_id', 'equalto', job.id)|list|length }} applicants</span>
+                <a href="{{ url_for('company.job_applicants', job_id=job.id) }}" title="View applicants" style="color:inherit;text-decoration:none;">
+                  <span title="Applications">{{ applicants|selectattr('job_id', 'equalto', job.id)|list|length }} applicants</span>
+                </a>
               </div>
             </div>
           </article>
