@@ -721,11 +721,7 @@ def seeker_dashboard():
     if min_sal:
         query = query.filter(JobListing.max_salary >= min_sal)
 
-    available_jobs_data = (
-        query.order_by(JobListing.is_boosted.desc(), JobListing.created_at.desc())
-        .limit(50)
-        .all()
-    )
+    available_jobs_data = query.all()
 
     active_resume = get_active_resume(seeker)
     resume_text = active_resume.extracted_text if active_resume else ""
@@ -756,10 +752,20 @@ def seeker_dashboard():
     }
 
     jobs = []
-    for item in recommendations:
+    for idx, item in enumerate(recommendations):
         job = item["job"]
         job_desc_full = f"{job.title} {job.description} {job.required_skills} {job.tags or ''}"
         ats_data = calculate_ats_score(resume_text, job_desc_full) if resume_text else {}
+
+        score = item["match_percentage"]
+        if score >= 90:
+            match_label = "Excellent Match"
+        elif score >= 75:
+            match_label = "Good Match"
+        elif score >= 60:
+            match_label = "Moderate Match"
+        else:
+            match_label = "Low Match"
 
         jobs.append({
             "id":               job.id,
@@ -775,7 +781,9 @@ def seeker_dashboard():
             "is_boosted":       job.is_boosted,
             "description":      job.description,
             "required_skills":  job.required_skills,
-            "match_score":      item["match_percentage"],
+            "match_score":      score,
+            "match_label":      match_label,
+            "is_recommended":   idx < 5,
             "similarity_score": item["similarity_score"],
             "matched_skills":   item["matched_skills"],
             "matched_skills_count": len(item["matched_skills"]),
@@ -784,7 +792,7 @@ def seeker_dashboard():
             "skill_match_percentage": item["skill_match_percentage"],
             "skill_match": item["skill_match_percentage"],
             "location_match": 100 if seeker.job_location_type and job.job_location_type and seeker.job_location_type.lower() in job.job_location_type.lower() else 0,
-            "relevance_score": item["match_percentage"],
+            "relevance_score": score,
             "is_best_match":    item["is_best_match"],
             "is_saved":         job.id in saved_job_ids,
             "ats_score":        ats_data.get("score", 0) if ats_data else 0,
@@ -862,7 +870,7 @@ def api_recommendations():
 
     active_resume = get_active_resume(seeker)
     resume_text = active_resume.extracted_text if active_resume else ""
-    jobs = JobListing.query.order_by(JobListing.created_at.desc()).limit(100).all()
+    jobs = JobListing.query.all()
     recommendations = recommend_jobs_for_resume(seeker, resume_text, jobs, limit=25)
     recommendations = [
         item for item in recommendations

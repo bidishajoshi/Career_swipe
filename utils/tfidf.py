@@ -179,41 +179,47 @@ def _weighted_document(text: str, skills: list[str]) -> str:
 
 
 def recommend_jobs_for_resume(seeker, resume_text: str, jobs: list, limit: int | None = None) -> list[dict]:
-    """Rank jobs by TF-IDF cosine similarity and skill coverage."""
+    """Rank jobs by the new 0-100 Match Score algorithm with proper tie-breakers."""
     if not jobs:
         return []
 
     profile = build_resume_profile(seeker, resume_text)
     resume_doc = _weighted_document(profile["text"], profile["skills"])
-    if not resume_doc:
-        return []
+    
+    # We still compute similarities as a fallback / detail, but prioritize the match score
+    if resume_doc and jobs:
+        job_docs = []
+        job_skills = {}
+        for job in jobs:
+            skills = extract_skills(job_to_text(job), job.required_skills or "")
+            job_skills[job.id] = skills
+            job_docs.append(_weighted_document(job_to_text(job), skills))
 
-    job_docs = []
-    job_skills = {}
-    for job in jobs:
-        skills = extract_skills(job_to_text(job), job.required_skills or "")
-        job_skills[job.id] = skills
-        job_docs.append(_weighted_document(job_to_text(job), skills))
-
-    vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1, 2), min_df=1)
-    matrix = vectorizer.fit_transform([resume_doc] + job_docs)
-    similarities = cosine_similarity(matrix[0:1], matrix[1:]).flatten()
+        try:
+            vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1, 2), min_df=1)
+            matrix = vectorizer.fit_transform([resume_doc] + job_docs)
+            similarities = cosine_similarity(matrix[0:1], matrix[1:]).flatten()
+        except Exception:
+            similarities = [0.0] * len(jobs)
+            job_skills = {job.id: [] for job in jobs}
+    else:
+        similarities = [0.0] * len(jobs)
+        job_skills = {job.id: [] for job in jobs}
 
     recommendations = []
     resume_skill_set = set(profile["skills"])
-    resume_keyword_set = set(profile["keywords"])
 
-    for job, similarity in zip(jobs, similarities):
+    for i, job in enumerate(jobs):
+        similarity = similarities[i] if i < len(similarities) else 0.0
         required_skills = set(job_skills.get(job.id, []))
         matched_skills = sorted(required_skills & resume_skill_set)
         missing_skills = sorted(required_skills - resume_skill_set)
         recommended_skills = missing_skills[:6]
 
         skill_score = (len(matched_skills) / len(required_skills)) if required_skills else 0
-        keyword_overlap = len(set(extract_keywords(job_to_text(job), 20)) & resume_keyword_set)
-        keyword_boost = min(keyword_overlap * 0.015, 0.15)
-        final_score = (float(similarity) * 0.75) + (skill_score * 0.20) + keyword_boost
-        match_percentage = max(0, min(100, round(final_score * 100)))
+
+        # Unified 0-100 match score
+        match_percentage = calculate_job_match_score(seeker, job, resume_text)
 
         recommendations.append({
             "job": job,
@@ -226,10 +232,30 @@ def recommend_jobs_for_resume(seeker, resume_text: str, jobs: list, limit: int |
             "is_best_match": match_percentage >= 75,
         })
 
+    from datetime import datetime
+    class SortKey:
+        def __init__(self, match_percentage, created_at, company_name):
+            self.match_percentage = match_percentage
+            self.created_at = created_at if created_at else datetime.min
+            self.company_name = (company_name or "").lower()
+
+        def __lt__(self, other):
+            # Sort by match_percentage descending
+            if self.match_percentage != other.match_percentage:
+                return self.match_percentage > other.match_percentage
+            # Sort by created_at descending (newest first)
+            if self.created_at != other.created_at:
+                return self.created_at > other.created_at
+            # Sort by company name ascending (alphabetically)
+            return self.company_name < other.company_name
+
     ranked = sorted(
         recommendations,
-        key=lambda item: (item["match_percentage"], item["similarity_score"]),
-        reverse=True,
+        key=lambda item: SortKey(
+            item["match_percentage"],
+            item["job"].created_at,
+            item["job"].company.company_name if getattr(item["job"], "company", None) else ""
+        )
     )
     return ranked[:limit] if limit else ranked
 
@@ -393,3 +419,175 @@ def filter_jobs_by_preferences(seeker, jobs: list, min_location_score: float = 0
     filtered_results.sort(key=lambda x: x['relevance_score'], reverse=True)
     
     return filtered_results
+
+
+def parse_custom_skills(skills_str: str) -> set[str]:
+    """Parse comma, pipe, or newline separated skill strings into a normalized set."""
+    if not skills_str:
+        return set()
+    tokens = re.split(r'[,\n|]+', skills_str)
+    return {t.strip().lower() for t in tokens if t.strip()}
+
+
+def extract_years_of_experience(text: str) -> int:
+    """Extract maximum numerical years of experience from profile text."""
+    if not text:
+        return 0
+    matches = re.findall(r'(\d+)\s*(?:year|yr)', text.lower())
+    if matches:
+        return max(int(m) for m in matches)
+    return 0
+
+
+def get_education_tier(text: str) -> int:
+    """Classify text into education tier (1-5)."""
+    if not text:
+        return 0
+    t = text.lower()
+    if any(kw in t for kw in ['phd', 'ph.d', 'doctorate', 'doctor of philosophy']):
+        return 5
+    if any(kw in t for kw in ['master', 'mba', 'msc', 'm.sc', 'ma', 'm.a', 'postgraduate', 'post-graduate']):
+        return 4
+    if any(kw in t for kw in ['bachelor', 'bsc', 'b.sc', 'ba', 'b.a', 'btech', 'b.tech', 'degree', 'undergraduate']):
+        return 3
+    if any(kw in t for kw in ['diploma']):
+        return 2
+    if any(kw in t for kw in ['high school', 'secondary', 'school']):
+        return 1
+    return 0
+
+
+def calculate_job_match_score(seeker, job, resume_text: str = None) -> int:
+    """
+    Calculates a Job Match Score (0–100) for a job listing based on the seeker's profile.
+    
+    Weights:
+      - Skills match: 50%
+      - Experience match: 20%
+      - Education match: 15%
+      - Location match: 10%
+      - Certifications & Keywords match: 5%
+    """
+    try:
+        # 1. Skills match (50%)
+        seeker_skills = parse_custom_skills(seeker.skills)
+        if resume_text:
+            resume_skills = set(extract_skills(resume_text))
+            seeker_skills = seeker_skills.union(resume_skills)
+            
+        job_skills = parse_custom_skills(job.required_skills)
+        if not job_skills:
+            skills_score = 1.0
+        else:
+            overlap = seeker_skills & job_skills
+            skills_score = len(overlap) / len(job_skills)
+            
+        # 2. Experience match (20%)
+        job_req_years = job.min_experience or 0
+        if not job_req_years and job.experience_level:
+            el = job.experience_level.lower()
+            if 'senior' in el:
+                job_req_years = 5
+            elif 'mid' in el:
+                job_req_years = 3
+            elif 'entry' in el or 'junior' in el:
+                job_req_years = 0
+                
+        seeker_years = 0
+        if seeker.experience_type == 'fresher':
+            seeker_years = 0
+        else:
+            seeker_years = extract_years_of_experience(seeker.experience)
+            if seeker_years == 0:
+                if seeker.experience:
+                    seeker_years = 2
+                elif seeker.experience_type == 'experienced':
+                    seeker_years = 1
+                    
+        if job_req_years == 0:
+            exp_score = 1.0
+        else:
+            if seeker_years >= job_req_years:
+                exp_score = 1.0
+            else:
+                exp_score = seeker_years / job_req_years
+
+        # 3. Education match (15%)
+        job_desc = (job.description or "").lower()
+        job_title = (job.title or "").lower()
+        job_edu_tier = get_education_tier(job_title + " " + job_desc)
+        
+        seeker_edu_text = f"{seeker.education or ''} {seeker.education_history or ''}"
+        seeker_edu_tier = get_education_tier(seeker_edu_text)
+        if seeker_edu_tier == 0 and seeker_edu_text.strip():
+            seeker_edu_tier = 3
+            
+        if job_edu_tier == 0:
+            edu_score = 1.0
+        else:
+            if seeker_edu_tier >= job_edu_tier:
+                edu_score = 1.0
+            else:
+                edu_score = seeker_edu_tier / job_edu_tier
+
+        # 4. Location match (10%)
+        job_loc_type = (job.job_location_type or "Onsite").lower()
+        seeker_loc_type = (seeker.job_location_type or "Onsite").lower()
+        
+        if job_loc_type == "remote":
+            loc_type_score = 1.0
+            geo_score = 1.0
+        else:
+            if job_loc_type == seeker_loc_type:
+                loc_type_score = 1.0
+            elif "hybrid" in job_loc_type or "hybrid" in seeker_loc_type:
+                loc_type_score = 0.7
+            else:
+                loc_type_score = 0.3
+                
+            seeker_city = (seeker.address or "").lower()
+            seeker_country = (seeker.country or "").lower()
+            job_city = (job.location or "").lower()
+            
+            if not job_city:
+                geo_score = 1.0
+            elif not seeker_city and not seeker_country:
+                geo_score = 0.5
+            elif (seeker_city and seeker_city in job_city) or (job_city and job_city in seeker_city) or (seeker_country and seeker_country in job_city):
+                geo_score = 1.0
+            else:
+                geo_score = match_location_preference(seeker.address, seeker.country, job.location, job.job_location_type)
+                
+        loc_score = (loc_type_score * 0.4) + (geo_score * 0.6)
+
+        # 5. Certifications/Keywords match (5%)
+        seeker_certs = (seeker.certifications or "").lower()
+        job_tags = (job.tags or "").lower()
+        
+        seeker_cert_words = set(clean_text(seeker_certs))
+        job_tag_words = set(clean_text(job_tags))
+        
+        seeker_profile_words = set(clean_text(f"{seeker.skills or ''} {seeker.experience or ''} {seeker.certifications or ''}"))
+        job_words = set(clean_text(f"{job.title} {job.description}"))
+        
+        if not seeker_cert_words:
+            cert_score = 1.0
+        else:
+            cert_overlap = len(seeker_cert_words & job_words)
+            cert_score = 1.0 if cert_overlap > 0 else 0.5
+            
+        if not job_tag_words:
+            tag_score = 1.0
+        else:
+            tag_overlap = len(seeker_profile_words & job_tag_words)
+            tag_score = 1.0 if tag_overlap > 0 else 0.5
+            
+        cert_keyword_score = (cert_score * 0.5) + (tag_score * 0.5)
+
+        # Final score out of 100
+        final_score = (skills_score * 0.50) + (exp_score * 0.20) + (edu_score * 0.15) + (loc_score * 0.10) + (cert_keyword_score * 0.05)
+        return max(0, min(100, round(final_score * 100)))
+    except Exception as e:
+        print(f"Error calculating job match score: {e}")
+        return 50 # Default safe fallback score on any error
+

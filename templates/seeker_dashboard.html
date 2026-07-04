@@ -185,6 +185,25 @@
 
               <!-- Info area -->
               <div class="jc-info">
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; align-items: center;">
+                  <span class="badge badge-match-score" style="background: rgba(33, 150, 243, 0.15); color: #2196f3; font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: bold; border: 1px solid rgba(33, 150, 243, 0.3);">⭐ {{ job.match_score|int }}% Match</span>
+                  
+                  <span class="badge badge-match-label" style="font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: bold;
+                    {% if job.match_score >= 90 %}
+                      background: rgba(76, 175, 80, 0.15); color: #4caf50; border: 1px solid rgba(76, 175, 80, 0.3);
+                    {% elif job.match_score >= 75 %}
+                      background: rgba(33, 150, 243, 0.15); color: #2196f3; border: 1px solid rgba(33, 150, 243, 0.3);
+                    {% elif job.match_score >= 60 %}
+                      background: rgba(255, 152, 0, 0.15); color: #ff9800; border: 1px solid rgba(255, 152, 0, 0.3);
+                    {% else %}
+                      background: rgba(244, 67, 54, 0.15); color: #f44336; border: 1px solid rgba(244, 67, 54, 0.3);
+                    {% endif %}
+                  ">{{ job.match_label }}</span>
+
+                  {% if job.is_recommended %}
+                    <span class="badge badge-recommended" style="background: linear-gradient(135deg, #ff9800, #ff5722); color: white; font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">✨ Recommended for You</span>
+                  {% endif %}
+                </div>
                 <div class="jc-title-row">
                   <h3>{{ job.title }}</h3>
                 </div>
