@@ -266,10 +266,6 @@ body.light-mode .jc-full-bg-placeholder {
   align-items: center;
   gap: 3px;
 }
-.jc-loc::before {
-  content: 'ðŸ“';
-  font-size: 11px;
-}
 
 /* Meta tags row */
 .jc-tags {

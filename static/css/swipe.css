@@ -285,10 +285,6 @@ body.light-mode .score-circle::after {
   align-items: center;
   gap: 3px;
 }
-.jc-loc::before {
-  content: '📍';
-  font-size: 11px;
-}
 
 /* Meta tags row */
 .jc-tags {
