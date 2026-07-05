@@ -69,6 +69,14 @@ def create_app(config_class=Config):
     app.register_blueprint(notifications_bp)
     app.register_blueprint(profile_bp)
 
+    if 'profile.edit_company_profile' in app.view_functions and 'edit_company_profile' not in app.view_functions:
+        app.add_url_rule(
+            '/profile/company',
+            endpoint='edit_company_profile',
+            view_func=app.view_functions['profile.edit_company_profile'],
+            methods=['GET', 'POST'],
+        )
+
     if csrf:
         for rule in app.url_map.iter_rules():
             if rule.rule.startswith('/api/'):

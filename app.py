@@ -27,6 +27,7 @@ from models import (
 )
 from apps.services import NotificationService, EligibilityService
 from apps.models import EligibilityQuestion
+from apps.routes.profile import profile_bp
 from utils.tfidf import (
     parse_resume, match_resume_to_job, extract_keywords, extract_skills,
     recommend_jobs_for_resume
@@ -94,6 +95,15 @@ from apps.routes.eligibility import eligibility_bp
 
 app.register_blueprint(notifications_bp, url_prefix='')
 app.register_blueprint(eligibility_bp, url_prefix='')
+app.register_blueprint(profile_bp, url_prefix='')
+
+if 'profile.edit_company_profile' in app.view_functions and 'edit_company_profile' not in app.view_functions:
+    app.add_url_rule(
+        '/profile/company',
+        endpoint='edit_company_profile',
+        view_func=app.view_functions['profile.edit_company_profile'],
+        methods=['GET', 'POST'],
+    )
 
 
 # ── Error Handlers ────────────────────────────────────────────────────────────
