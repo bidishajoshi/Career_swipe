@@ -338,7 +338,7 @@
       <!-- ════════════════════════════════════════════════════════════ -->
       <div class="form-actions">
         <button type="submit" class="btn btn-primary btn-full">Save Changes</button>
-        <a href="{{ url_for('company.company_dashboard') }}" class="btn btn-secondary btn-full">Back to Dashboard</a>
+        <a href="{{ url_for('company_dashboard') }}" class="btn btn-secondary btn-full">Back to Dashboard</a>
       </div>
     </form>
   </div>
@@ -364,7 +364,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" id="cancelDelete">Cancel</button>
-      <form method="POST" action="{{ url_for('company.delete_account') }}" style="display: inline;">
+      <form method="POST" action="{{ url_for('delete_account') }}" style="display: inline;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="btn btn-danger">Yes, Delete My Account</button>
       </form>

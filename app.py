@@ -28,6 +28,7 @@ from models import (
 from apps.services import NotificationService, EligibilityService
 from apps.models import EligibilityQuestion
 from apps.routes.profile import profile_bp
+from flask import abort
 from utils.tfidf import (
     parse_resume, match_resume_to_job, extract_keywords, extract_skills,
     recommend_jobs_for_resume
@@ -104,6 +105,12 @@ if 'profile.edit_company_profile' in app.view_functions and 'edit_company_profil
         view_func=app.view_functions['profile.edit_company_profile'],
         methods=['GET', 'POST'],
     )
+
+@app.route('/account/delete', methods=['POST'], endpoint='delete_account')
+def delete_account():
+    """Placeholder delete-account route used by templates until a full account deletion flow exists."""
+    flash('Account deletion is not available yet.', 'info')
+    return redirect(url_for('company_dashboard'))
 
 
 # ── Error Handlers ────────────────────────────────────────────────────────────

@@ -202,7 +202,7 @@
       <h1>Applicants</h1>
       <p>{{ job.title or 'Untitled role' }} &mdash; {{ applicants|length }} applicant{% if applicants|length != 1 %}s{% endif %}</p>
     </div>
-    <a href="{{ url_for('company.company_dashboard') }}" class="btn-back">
+    <a href="{{ url_for('company_dashboard') }}" class="btn-back">
       &#8592; Back to Dashboard
     </a>
   </div>
