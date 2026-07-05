@@ -1657,42 +1657,45 @@ body.light-mode .app-table th {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  display: inline-block;
+  line-height: 1;
+  color: #ffffff !important;
 }
 
 .status-pending {
-  background: rgba(245, 158, 11, 0.1);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  background: #f59e0b;
+  color: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.06);
 }
 
 .status-shortlisted {
-  background: rgba(124, 58, 237, 0.1);
-  color: var(--purple-light);
-  border: 1px solid rgba(124, 58, 237, 0.2);
+  background: #7c3aed;
+  color: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.06);
 }
 
 .status-accepted {
-  background: rgba(16, 185, 129, 0.1);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: #10b981;
+  color: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.06);
 }
 
 .status-rejected {
-  background: rgba(239, 68, 68, 0.1);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.24);
+  background: #ef4444;
+  color: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.06);
 }
 
 .status-interview {
-  background: rgba(59, 130, 246, 0.1);
-  color: var(--primary-light);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: #3b82f6;
+  color: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.06);
 }
 
 body.light-mode .status-interview {
-  background: rgba(139, 42, 77, 0.15);
-  color: #8b2a4d;
-  border: 1px solid rgba(139, 42, 77, 0.4);
+  background: #3b82f6;
+  color: #ffffff !important;
+  border: 1px solid rgba(0,0,0,0.06);
 }
 
 
