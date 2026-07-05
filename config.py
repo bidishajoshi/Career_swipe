@@ -8,6 +8,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+REMOTE_DATABASE_URL = os.getenv("REMOTE_DATABASE_URL")
 
 
 class Config:
