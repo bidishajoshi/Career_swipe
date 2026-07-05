@@ -4,67 +4,50 @@ def allowed_file(filename, allowed):
     """Check if a file extension is in the allowed set."""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed
 
-
-def format_job_location(loc_str) -> str:
+def format_job_location(loc_str):
     """
     Format job location string to display only once and remove duplicate icons.
-    - If job location is 'Remote', returns '🌍 Remote'.
+    - If job location is 'Remote' alone, returns '🌍 Remote (Worldwide)'.
+    - If job location includes 'Remote' with other locations, returns locations with a trailing '🌍 All Over'.
     - If empty or NULL, returns '📍 Location Not Specified'.
-    - Otherwise, returns a cleaned string with single '📍' emoji and properly deduplicated locations.
+    - Otherwise, returns a cleaned string with a single '📍' emoji and deduplicated locations.
     """
     if not loc_str:
         return "📍 Location Not Specified"
-        
-    cleaned = str(loc_str).strip()
-    
-    # Strip any existing 📍 or 🌍 or other emojis
-    cleaned = re.sub(r'[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD00-\uDFFF]', '', cleaned)
-    cleaned = cleaned.strip()
-    
-    if not cleaned:
-        return "📍 Location Not Specified"
-        
-    # Split by comma or whitespace to find duplicates
-    parts = [p.strip() for p in re.split(r'[,\s]+', cleaned) if p.strip()]
-    unique_parts = []
-    seen = set()
-    for p in parts:
-        p_lower = p.lower()
-        if p_lower not in seen:
-            seen.add(p_lower)
-            # Standardize common terms
-            if p_lower == 'nepal':
-                unique_parts.append('Nepal')
-            elif p_lower == 'singapore':
-                unique_parts.append('Singapore')
-            elif p_lower == 'india':
-                unique_parts.append('India')
-            elif p_lower == 'usa' or p_lower == 'us' or p_lower == 'united states':
-                unique_parts.append('USA')
-            else:
-                # Capitalize first letter of arbitrary location names
-                unique_parts.append(p[0].upper() + p[1:] if len(p) > 1 else p.upper())
-                
-    # Check if Remote
-    if any(p.lower() == 'remote' for p in unique_parts):
-        return "🌍 Remote"
-        
-    # Resolve single country or deduplicate country name
-    if len(unique_parts) == 1:
-        return f"📍 {unique_parts[0]}"
-        
-    # Deduplicate resolved country names
-    final_parts = []
-    seen_final = set()
-    for p in unique_parts:
-        p_lower = p.lower()
-        if p_lower not in seen_final:
-            seen_final.add(p_lower)
-            final_parts.append(p)
-            
-    # If final parts consists only of a single country
-    if len(final_parts) == 1:
-        return f"📍 {final_parts[0]}"
-        
-    return f"📍 {', '.join(final_parts)}"
 
+    # Split by commas, pipes or semicolons and strip whitespace
+    parts = [p.strip() for p in re.split(r"[,:;|]+", str(loc_str)) if p.strip()]
+    cleaned_parts = []
+    for p in parts:
+        # Remove any emoji or special characters
+        p_clean = re.sub(r"[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD00-\uDFFF]", "", p)
+        p_clean = p_clean.strip()
+        if not p_clean:
+            continue
+        if p_clean.lower() == "remote":
+            cleaned_parts.append("remote")
+        else:
+            # Capitalize each word (e.g., united states -> United States)
+            cleaned_parts.append(" ".join(word.capitalize() for word in p_clean.split()))
+
+    # Deduplicate case‑insensitively while preserving order
+    unique = []
+    seen = set()
+    for p in cleaned_parts:
+        low = p.lower()
+        if low not in seen:
+            seen.add(low)
+            unique.append(p)
+
+    remote_present = any(p.lower() == "remote" for p in unique)
+    other = [p for p in unique if p.lower() != "remote"]
+
+    if remote_present:
+        if other:
+            return f"📍 {', '.join(other)} 🌍 All Over"
+        else:
+            return "🌍 Remote (Worldwide)"
+
+    if len(other) == 1:
+        return f"📍 {other[0]}"
+    return f"📍 {', '.join(other)}"
