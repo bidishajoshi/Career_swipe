@@ -15,7 +15,7 @@ from flask import (
 )
 
 from ..extensions import db
-from ..models import Company, JobListing, JobSwipe, Notification
+from ..models import Company, JobListing, JobSwipe, Notification, Seeker
 from ..services.email_service import send_status_update_email
 from ..services.notification_service import create_notification
 from utils.applicant_presenter import build_applicant_cards, existing_static_path
@@ -61,11 +61,16 @@ def company_dashboard():
     swipes = (
         JobSwipe.query
         .join(JobListing)
+        .join(Seeker)
         .filter(
             JobListing.company_id == company.id,
             JobSwipe.direction == 'right',
         )
-        .order_by(JobSwipe.created_at.desc())
+        .order_by(
+            JobSwipe.ai_rank_score.desc(),
+            Seeker.experience.desc(),
+            JobSwipe.created_at.desc(),
+        )
         .all()
     )
 
@@ -105,8 +110,13 @@ def job_applicants(job_id):
 
     swipes = (
         JobSwipe.query
+        .join(Seeker)
         .filter_by(job_id=job_id, direction='right')
-        .order_by(JobSwipe.created_at.desc())
+        .order_by(
+            JobSwipe.ai_rank_score.desc(),
+            Seeker.experience.desc(),
+            JobSwipe.created_at.desc(),
+        )
         .all()
     )
 
@@ -142,11 +152,16 @@ def company_insights():
     swipes = (
         JobSwipe.query
         .join(JobListing)
+        .join(Seeker)
         .filter(
             JobListing.company_id == company.id,
             JobSwipe.direction == 'right',
         )
-        .order_by(JobSwipe.created_at.desc())
+        .order_by(
+            JobSwipe.ai_rank_score.desc(),
+            Seeker.experience.desc(),
+            JobSwipe.created_at.desc(),
+        )
         .all()
     )
 
