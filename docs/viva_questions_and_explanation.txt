@@ -1,0 +1,102 @@
+Viva Questions — CareerSwipe Project
+
+1. High-level / Architecture
+- What is the overall architecture of CareerSwipe? (monolithic Flask app with Blueprints)
+- What are the main components and folders of the project? (apps, templates, static, models, services, utils)
+- How does the app start (entry points)? (wsgi.py, app.py, or factory in apps/__init__.py)
+- How are configuration and environment variables managed? (config.py, .env, Config class)
+
+2. Flask-specific
+- Explain the application factory pattern used in `apps/__init__.py`.
+- What are Blueprints and why are they used here? Give examples of blueprints in the code.
+- How are static files and templates configured/served?
+- How does `url_for` resolve endpoints and what can break it?
+- How is CSRF protection applied and how are API routes exempted?
+
+3. Database and Models
+- What ORM is used and how are models organized? (SQLAlchemy via `extensions.db`)
+- Describe key models: `Seeker`, `Company`, `JobListing`, `JobSwipe`, `Notification`, `UploadedResume`.
+- How are migrations handled? (Alembic in `migrations/`)
+- How is seeding implemented? (seed_db.py, seed_postgres.py, seed scripts)
+
+4. Features & Flows
+- Walk through the seeker registration, resume upload, and job apply flow.
+- Walk through the company registration, post job, and applicant review flow.
+- How does the application compute match scores and ATS scores? (tf-idf utilities and `utils/tfidf.py`)
+- How are notifications created and delivered (in-app and email)?
+
+5. File uploads & storage
+- How are file uploads handled (resumes, logos, banners)? What folders are used?
+- How are file paths normalized when rendering static URLs?
+
+6. Services & Utilities
+- What services exist in `apps/services` and what responsibilities do they have? (email_service, notification_service, eligibility_service)
+- What utility modules support parsing and scoring resumes? (resume_parser, tfidf)
+
+7. Security & Validation
+- How are passwords stored and validated? (Werkzeug generate_password_hash / check_password_hash)
+- What checks guard routes for company/seeker sessions?
+- How is input sanitization/allowed_file enforced?
+
+8. Deployment & Running
+- How do you run locally? (py wsgi.py or flask run via factory)
+- What production considerations are included? (Procfile, render.yaml, wsgi/gunicorn)
+- How to configure email and other environment-only secrets?
+
+9. Troubleshooting & Debugging
+- Common routing errors (url_for endpoint issues) and how to resolve them.
+- Database connection errors and fallback (SQLite / Postgres configs).
+- How to debug file not found for static assets.
+
+10. Extension / Improvement
+- Where would you add background jobs (e.g., Celery) for email delivery or heavy processing?
+- How to scale the matching pipeline for many resumes and jobs?
+
+
+Concise Project Explanation — How CareerSwipe works
+
+Overview
+CareerSwipe is a monolithic Flask web application that connects job seekers and companies. It stores users (seekers/companies), job listings, and application swipes in a relational database using SQLAlchemy. The UI is rendered using Jinja2 templates and styles in `static/css`.
+
+Entry points
+- `apps.create_app()` (factory) builds the Flask app with Blueprints for modular routes.
+- `wsgi.py` or `app.py` are used to run the app in different modes.
+
+Key flows
+- Seeker: register → upload resume → swipe or apply to jobs → system computes match & ATS scores → application (JobSwipe) created → company notified.
+- Company: register → post job → view applicants → update applicant status (shortlist/interview/accept/reject) → optional email notifications sent.
+
+Scoring & Resume parsing
+- `utils/resume_parser.py` extracts text from uploaded resumes.
+- `utils/tfidf.py` computes TF-IDF style similarity between resume text and job text to produce match scores. An ATS heuristic function produces an ATS score.
+
+Notifications & Email
+- In-app `Notification` records are created via `apps/services/notification_service.py`.
+- Emails are sent using the configured mail extension; `apps/services/email_service.py` prepares HTML emails.
+
+Uploads & Static
+- Uploaded files are saved to configured folders (e.g., `RESUME_FOLDER`, `LOGO_FOLDER`). Static route handlers normalize paths so `url_for('static', filename=...)` works.
+
+Security
+- Passwords hashed with Werkzeug.
+- Simple session-based auth for companies and seekers.
+- CSRF protection via Flask-WTF where available; some API endpoints exempted.
+
+Where to read code
+- Routes: `apps/routes/` (auth, seeker, company, jobs, profile, notifications)
+- Models: `apps/models/`
+- Services: `apps/services/`
+- Utilities: `utils/`
+- Templates: `templates/`
+- Static CSS/JS: `static/`
+
+
+Instructions to generate a Word (.docx) file
+1. Install python-docx:
+   pip install python-docx
+2. Run the generator script:
+   python docs/generate_viva_docx.py
+3. The script will produce `docs/CareerSwipe_viva_questions.docx`.
+
+
+--- End of document
