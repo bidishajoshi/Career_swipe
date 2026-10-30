@@ -1,6 +1,11 @@
 import os, sys
 
-
+if __name__ == "__main__":
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    venv_python = os.path.join(project_root, "venv", "Scripts", "python.exe")
+    current_python = os.path.abspath(sys.executable)
+    if os.path.exists(venv_python) and current_python.lower() != os.path.abspath(venv_python).lower():
+        os.execv(venv_python, [venv_python] + sys.argv)
 
 from dotenv import load_dotenv
 
