@@ -4,11 +4,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def check():
-    db_url = os.getenv("DATABASE_URL")
-    if not db_url:
-        print("Error: DATABASE_URL not found.")
-        return
 
     # Render fix
     if db_url.startswith("postgres://"):
