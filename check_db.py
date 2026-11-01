@@ -10,9 +10,7 @@ def check():
         print("Error: DATABASE_URL not found.")
         return
 
-    # Render fix
-    if db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    
 
     print(f"Checking database at: {db_url.split('@')[-1]}")
     
