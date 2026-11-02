@@ -16,7 +16,12 @@ def check():
 
     print(f"Checking database at: {db_url.split('@')[-1]}")
     
-    
+    # SQLite instance folder handling
+    if db_url.startswith("sqlite:///") and not db_url.startswith("sqlite:////"):
+        sqlite_path = db_url.replace("sqlite:///", "")
+        instance_path = os.path.join("instance", sqlite_path)
+        if os.path.exists(instance_path):
+            db_url = f"sqlite:///{instance_path}"
     
     try:
         connect_args = {"sslmode": "require"} if db_url.startswith("postgresql") and "render.com" in db_url else {}
